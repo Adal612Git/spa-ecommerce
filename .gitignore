@@ -1,0 +1,21 @@
+# Node / general
+node_modules/
+dist/
+coverage/
+.DS_Store
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
+
+# Quasar / Vite
+.quasar/
+.vite/
+*.local
+
+# Env
+.env
+.env.*
+node_modules/
+dist/
+.env
+.env.*
