@@ -1,22 +1,17 @@
 # SPA E-commerce – Backend (Express + TypeScript)
 
-API mínima en **Express** usando **TypeScript** y módulos ESM.
-
-## Requisitos
-- Node 20+ y npm
-
 ## Scripts
-```bash
-npm run dev    # tsx watch src/index.ts
-npm run build  # tsc -p . -> compila a dist/
-npm start      # node dist/index.js
-```
+- `npm run dev` — desarrollo con recarga (`tsx watch src/index.ts`)
+- `npm run build` — compila a `dist/`
+- `npm start` — ejecuta compilado (`node dist/index.js`)
 
-## Endpoint de salud
-`GET /health` → `{ ok: true, service: "spa-ecommerce-backend" }`
+## Endpoint
+- `GET /health` → `{ "ok": true, "service": "spa-ecommerce-backend" }`
 
-## Desarrollo
+## Cómo correr
 ```bash
-npm install
-npm run dev
+npm ci
+npm run build
+node dist/index.js
+# http://localhost:3000/health
 ```

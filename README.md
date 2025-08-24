@@ -1,4 +1,5 @@
 # SPA E-commerce
+[![ci](https://github.com/Adal612Git/spa-ecommerce/actions/workflows/ci.yml/badge.svg)](https://github.com/Adal612Git/spa-ecommerce/actions/workflows/ci.yml)
 
 Monorepo para una tienda en línea con **frontend** (Quasar + Vue 3 + TypeScript) y **backend** (Express + TypeScript).
 
