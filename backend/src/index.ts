@@ -1,4 +1,5 @@
 import http from 'http';
+// eslint-disable-next-line import/no-unresolved
 import { Server } from 'socket.io';
 import { PrismaClient } from '@prisma/client';
 // eslint-disable-next-line import/no-unresolved
