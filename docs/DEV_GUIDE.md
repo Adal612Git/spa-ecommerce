@@ -7,3 +7,9 @@
    - `cd backend && npm install`
 4. Levanta el frontend: `npm run dev` dentro de `frontend/`.
 5. Levanta el backend: `npm run dev` dentro de `backend/`.
+
+## Docker local
+
+- `cp .env.example .env`
+- `docker compose up --build`
+- FE: http://localhost:9000  BE: http://localhost:3000/health  DB: localhost:5432

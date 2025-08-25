@@ -19,6 +19,15 @@ npm install
 npm run dev  # http://localhost:3000
 ```
 
+## Docker (local)
+```bash
+cp .env.example .env
+docker compose up --build
+# FE: http://localhost:9000
+# BE: http://localhost:3000/health
+# DB: localhost:5432
+```
+
 ## Convenciones
 - Ramas: `main` (protegida) y `develop` (desarrollo). Trabaja en ramas `feat/*` o `fix/*`.
 - Commits: usa [Conventional Commits](https://www.conventionalcommits.org/).

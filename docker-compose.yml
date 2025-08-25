@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-spa_ecommerce}
+    ports: ["5432:5432"]
+    volumes: [ "db_data:/var/lib/postgresql/data" ]
+  backend:
+    build: ./backend
+    env_file: [.env]
+    environment:
+      PORT: ${PORT:-3000}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@db:5432/spa_ecommerce}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:9000}
+    depends_on: [db]
+    ports: ["3000:3000"]
+  frontend:
+    build: ./frontend
+    env_file: [.env]
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000}
+    ports: ["9000:80"]
+volumes: { db_data: {} }
