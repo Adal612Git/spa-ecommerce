@@ -3,6 +3,7 @@ import { Prisma, type PrismaClient } from '@prisma/client';
 // eslint-disable-next-line import/no-unresolved
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import type { Logger } from 'pino';
+import type { Server } from 'socket.io';
 
 interface RequestWithLog extends express.Request {
   log?: Logger;
@@ -59,23 +60,60 @@ export function createWebhookRouter(prisma: PrismaClient) {
           orderStatus = 'PENDING';
       }
 
-      await prisma.$transaction([
-        prisma.order.update({ where: { id: orderId }, data: { status: orderStatus } }),
-        prisma.paymentEvent.create({
+      let userId: string | undefined;
+
+      await prisma.$transaction(async (tx) => {
+        interface OrderWithItems {
+          items: { productId: number; qty: number }[];
+          userId?: string;
+        }
+        const order = (await tx.order.update({
+          where: { id: orderId },
+          data: { status: orderStatus },
+          include: { items: true },
+        })) as OrderWithItems;
+
+        userId = order.userId;
+
+        if (orderStatus === 'APPROVED') {
+          for (const item of order.items) {
+            const updated = await tx.product.updateMany({
+              where: { id: item.productId, stock: { gte: item.qty } },
+              data: { stock: { decrement: item.qty } },
+            });
+            if (updated.count === 0) {
+              throw new Error(`Insufficient stock for product ${item.productId}`);
+            }
+          }
+        }
+
+        await tx.paymentEvent.create({
           data: {
             orderId,
             mp_payment_id: String(mpPaymentId),
             status: orderStatus,
             raw_payload: req.body as unknown as Prisma.JsonValue,
           },
-        }),
-      ]);
+        });
+      });
+
+      const io: Server | undefined = req.app.get('io');
+      if (orderStatus === 'APPROVED' && userId && io) {
+        io.to(`user:${userId}`).emit('order:statusChanged', {
+          orderId,
+          status: orderStatus,
+        });
+      }
 
       res.json({ ok: true });
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
         req.log?.info?.({ mp_payment_id: mpPaymentId }, 'Evento duplicado ignorado');
         return res.status(200).json({ status: 'ignored' });
+      }
+      if (err instanceof Error && err.message.startsWith('Insufficient stock')) {
+        req.log?.warn?.(err.message);
+        return res.status(400).json({ error: err.message });
       }
       req.log?.error?.(err);
       res.status(500).json({ error: 'Internal Server Error' });
