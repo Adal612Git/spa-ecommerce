@@ -3,4 +3,10 @@
 
 set -euo pipefail
 
+if [ -f .env.demo ]; then
+  set -a
+  source .env.demo
+  set +a
+fi
+
 vercel deploy frontend --prod --env VITE_API_BASE_URL="$VITE_API_BASE_URL"
