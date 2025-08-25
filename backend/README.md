@@ -28,6 +28,12 @@
   - `/webhook/mercadopago` → 30 solicitudes por minuto por IP.
 - Script `scripts/db-backup.sh` para respaldos diarios de la base de datos (ejecutar vía cron).
 
+## Logs
+
+- Los logs se guardan en `logs/app.log`.
+- Se rotan diariamente o al alcanzar 10 MB, conservando solo los últimos 7 archivos.
+- Datos sensibles como tokens o contraseñas se redactan como `[REDACTED]`.
+
 ## Rutas
 
 - `GET /health` → `{ "ok": true, "service": "spa-ecommerce-backend" }`

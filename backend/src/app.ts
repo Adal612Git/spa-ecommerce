@@ -3,8 +3,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import pinoHttp from 'pino-http';
+import pino, { type Logger } from 'pino';
+import { createStream } from 'rotating-file-stream';
+import fs from 'fs';
 import type { Options } from 'pino-http';
-import type { Logger } from 'pino';
 import { randomUUID } from 'crypto';
 import passport from 'passport';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
@@ -61,10 +63,30 @@ export function createApp(prisma: PrismaClient) {
     legacyHeaders: false,
   });
 
-  app.use(
-    (pinoHttp as unknown as (opts?: Options) => express.RequestHandler)({
-      genReqId: () => randomUUID(),
-      autoLogging: true,
+  const logDir = 'logs';
+  if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir);
+  }
+
+  const fileStream = createStream('app.log', {
+    size: '10M',
+    interval: '1d',
+    maxFiles: 7,
+    path: logDir,
+  });
+
+  const streams = [{ stream: fileStream }];
+  if (process.env.NODE_ENV !== 'production') {
+    streams.push({
+      stream: pino.transport({
+        target: 'pino-pretty',
+        options: { translateTime: 'SYS:standard' },
+      }),
+    });
+  }
+
+  const logger = pino(
+    {
       redact: {
         paths: [
           'req.headers.authorization',
@@ -77,10 +99,15 @@ export function createApp(prisma: PrismaClient) {
         ],
         censor: '[REDACTED]',
       },
-      transport:
-        process.env.NODE_ENV === 'production'
-          ? undefined
-          : { target: 'pino-pretty', options: { translateTime: 'SYS:standard' } },
+    },
+    pino.multistream(streams),
+  );
+
+  app.use(
+    (pinoHttp as unknown as (opts?: Options) => express.RequestHandler)({
+      genReqId: () => randomUUID(),
+      autoLogging: true,
+      logger,
     }),
   );
 
