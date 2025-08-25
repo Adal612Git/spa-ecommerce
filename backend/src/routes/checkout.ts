@@ -1,5 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
+// eslint-disable-next-line import/no-unresolved
 import { MercadoPagoConfig, Preference } from 'mercadopago';
 import type { PrismaClient } from '@prisma/client';
 
