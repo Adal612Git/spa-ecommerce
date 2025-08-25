@@ -24,7 +24,7 @@ class FakePrisma {
   events: any[] = [];
 
   order = {
-    update: vi.fn().mockResolvedValue(null),
+    update: vi.fn().mockResolvedValue({ items: [], userId: 'u1' }),
   };
 
   paymentEvent = {
@@ -42,8 +42,12 @@ class FakePrisma {
     },
   };
 
-  $transaction = async (ops: Promise<any>[]) => {
-    for (const op of ops) {
+  $transaction = async (arg: any) => {
+    if (typeof arg === 'function') {
+      await arg(this);
+      return;
+    }
+    for (const op of arg) {
       await op;
     }
   };
