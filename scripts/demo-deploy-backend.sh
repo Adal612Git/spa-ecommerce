@@ -4,6 +4,12 @@
 
 set -euo pipefail
 
+if [ -f .env.demo ]; then
+  set -a
+  source .env.demo
+  set +a
+fi
+
 render services deploy spa-ecommerce-backend \
   --branch main \
   --env DATABASE_URL="$DATABASE_URL" \

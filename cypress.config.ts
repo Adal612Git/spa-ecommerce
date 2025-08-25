@@ -19,6 +19,14 @@ export default defineConfig({
         async getOrder(id: number) {
           return prisma.order.findUnique({ where: { id } });
         },
+        async createProduct(data: {
+          name: string;
+          slug: string;
+          price_cents: number;
+          stock?: number;
+        }) {
+          return prisma.product.create({ data });
+        },
       });
     },
   },
