@@ -13,6 +13,11 @@ const routes: RouteRecordRaw[] = [
       { path: 'checkout/failure', component: () => import('pages/CheckoutFailurePage.vue') },
       { path: 'checkout/pending', component: () => import('pages/CheckoutPendingPage.vue') },
       { path: 'orders', component: () => import('pages/OrdersPage.vue'), meta: { requiresAuth: true } },
+      {
+        path: 'admin',
+        component: () => import('pages/AdminOrdersPage.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true },
+      },
     ],
   },
 
