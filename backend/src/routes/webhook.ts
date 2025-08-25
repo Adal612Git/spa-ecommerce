@@ -41,23 +41,43 @@ export function createWebhookRouter(prisma: PrismaClient) {
         return res.status(200).json({ status: 'ignored' });
       }
 
-      const payment = await new Payment(mp).get({ id: String(mpPaymentId) });
-      const orderId = Number(payment.external_reference);
-      if (!orderId || Number.isNaN(orderId)) {
-        req.log?.error?.({ mp_payment_id: mpPaymentId }, 'Order reference not found');
-        return res.status(400).json({ error: 'order not found' });
-      }
-
+      let orderId: number;
       let orderStatus: string;
-      switch (payment.status) {
-        case 'approved':
-          orderStatus = 'APPROVED';
-          break;
-        case 'rejected':
-          orderStatus = 'REJECTED';
-          break;
-        default:
-          orderStatus = 'PENDING';
+
+      if (process.env.MP_USE_MOCK === '1') {
+        orderId = Number(req.body.orderId);
+        if (!orderId || Number.isNaN(orderId)) {
+          req.log?.error?.('orderId missing in mock request');
+          return res.status(400).json({ error: 'order not found' });
+        }
+        const status = String(req.body.payment_status || 'approved');
+        switch (status) {
+          case 'approved':
+            orderStatus = 'APPROVED';
+            break;
+          case 'rejected':
+            orderStatus = 'REJECTED';
+            break;
+          default:
+            orderStatus = 'PENDING';
+        }
+      } else {
+        const payment = await new Payment(mp).get({ id: String(mpPaymentId) });
+        orderId = Number(payment.external_reference);
+        if (!orderId || Number.isNaN(orderId)) {
+          req.log?.error?.({ mp_payment_id: mpPaymentId }, 'Order reference not found');
+          return res.status(400).json({ error: 'order not found' });
+        }
+        switch (payment.status) {
+          case 'approved':
+            orderStatus = 'APPROVED';
+            break;
+          case 'rejected':
+            orderStatus = 'REJECTED';
+            break;
+          default:
+            orderStatus = 'PENDING';
+        }
       }
 
       let userId: string | undefined;

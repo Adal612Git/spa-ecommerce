@@ -1,0 +1,14 @@
+{
+  "name": "spa-ecommerce",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": ["backend", "frontend"],
+  "scripts": {
+    "e2e": "MP_USE_MOCK=1 start-server-and-test \"npm run dev -w backend\" http://localhost:3000 \"cypress run\""
+  },
+  "devDependencies": {
+    "cypress": "^13.7.0",
+    "start-server-and-test": "^2.0.5"
+  }
+}
