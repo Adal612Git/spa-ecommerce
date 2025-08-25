@@ -9,7 +9,10 @@
 5. Levanta el backend: `npm run dev` dentro de `backend/`.
 
 ## Docker local
-
-- `cp .env.example .env`
-- `docker compose up --build`
-- FE: http://localhost:9000  BE: http://localhost:3000/health  DB: localhost:5432
+```bash
+# Backend + DB con Docker
+cp .env.example .env
+docker compose up --build
+# health: http://localhost:3000/health
+# users:  http://localhost:3000/api/users
+```

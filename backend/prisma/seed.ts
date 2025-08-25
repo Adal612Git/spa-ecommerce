@@ -8,7 +8,12 @@ async function main() {
   await prisma.user.upsert({
     where: { email: 'admin@spa-ecommerce.local' },
     update: {},
-    create: { email: 'admin@spa-ecommerce.local', name: 'Admin', role: Role.ADMIN, passwordHash: adminHash },
+    create: {
+      email: 'admin@spa-ecommerce.local',
+      name: 'Admin',
+      role: Role.ADMIN,
+      passwordHash: adminHash,
+    },
   });
 
   const demoHash = await bcrypt.hash('demo1234', 10);
@@ -26,9 +31,11 @@ async function main() {
   console.log('Seeded admin + demo users');
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-}).finally(async () => {
-  await prisma.$disconnect();
-});
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
