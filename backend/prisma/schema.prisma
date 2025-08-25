@@ -47,6 +47,7 @@ model Order {
   total_cents Int
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+  mp_preference_id String?
   items       OrderItem[]
 }
 
