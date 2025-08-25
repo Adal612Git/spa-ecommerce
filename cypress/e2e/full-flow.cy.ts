@@ -21,31 +21,44 @@ describe('checkout flow', () => {
       cy.request('POST', `${api}/auth/login`, { email, password })
         .its('body.token')
         .then((token) => {
-          const cart = [] as { productId: number; qty: number }[];
-
-          // simulate user adding product to cart
-          cart.push({ productId, qty: 1 });
-          expect(cart).to.have.length(1);
-
           cy.request({
             method: 'POST',
-            url: `${api}/checkout/create-order`,
-            body: { items: cart },
+            url: `${api}/cart`,
+            body: { productId, qty: 1 },
             headers: { Authorization: `Bearer ${token}` },
-          }).then((orderRes) => {
-            const orderId = orderRes.body.orderId;
+          })
+            .its('status')
+            .should('eq', 200);
 
-            // simulate MercadoPago webhook using mock mode
-            cy.request('POST', `${api}/webhook/mercadopago`, {
-              mp_payment_id: 'test-payment',
-              orderId,
-              payment_status: 'approved',
-            })
-              .its('status')
-              .should('eq', 200);
+          cy.request({
+            method: 'GET',
+            url: `${api}/cart`,
+            headers: { Authorization: `Bearer ${token}` },
+          }).then((cartRes) => {
+            const items = cartRes.body.items;
+            expect(items).to.have.length(1);
+            expect(items[0]).to.include({ productId, qty: 1 });
 
-            // verify order status updated to APPROVED
-            cy.task('getOrder', orderId).its('status').should('eq', 'APPROVED');
+            cy.request({
+              method: 'POST',
+              url: `${api}/checkout/create-order`,
+              body: { items },
+              headers: { Authorization: `Bearer ${token}` },
+            }).then((orderRes) => {
+              const orderId = orderRes.body.orderId;
+
+              // simulate MercadoPago webhook using mock mode
+              cy.request('POST', `${api}/webhook/mercadopago`, {
+                mp_payment_id: 'test-payment',
+                orderId,
+                payment_status: 'approved',
+              })
+                .its('status')
+                .should('eq', 200);
+
+              // verify order status updated to APPROVED
+              cy.task('getOrder', orderId).its('status').should('eq', 'APPROVED');
+            });
           });
         });
     });

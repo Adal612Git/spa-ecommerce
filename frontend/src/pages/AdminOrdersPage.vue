@@ -24,7 +24,8 @@ interface Order {
   created_at: string;
 }
 
-const apiBase = import.meta.env.VITE_API_BASE_URL;
+const apiBase =
+  import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
 const auth = useAuthStore();
 const orders = ref<Order[]>([]);
 const loading = ref(false);
