@@ -1,10 +1,22 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
 import type { PrismaClient } from '@prisma/client';
 
 let createApp: typeof import('../src/app.js').createApp;
 
 process.env.JWT_SECRET = 'testsecret';
+process.env.MP_ACCESS_TOKEN = 'test';
+process.env.CORS_ORIGIN = 'http://localhost:9000';
+
+vi.mock('mercadopago', () => ({
+  MercadoPagoConfig: vi.fn().mockImplementation(() => ({})),
+  Preference: vi.fn().mockImplementation(() => ({
+    create: vi.fn().mockResolvedValue({
+      id: 'pref123',
+      init_point: 'http://mp/init',
+    }),
+  })),
+}));
 
 interface Product {
   id: number;
@@ -19,6 +31,8 @@ class FakePrisma {
   ];
 
   createdOrder: any = null;
+  orderToFind: any = null;
+  updatedOrder: any = null;
 
   product = {
     findMany: async ({ where }: any) => {
@@ -31,6 +45,16 @@ class FakePrisma {
     create: async ({ data }: any) => {
       this.createdOrder = data;
       return { id: 123, ...data };
+    },
+    findUnique: async ({ where }: any) => {
+      if (this.orderToFind && where.id === this.orderToFind.id) {
+        return this.orderToFind;
+      }
+      return null;
+    },
+    update: async ({ where, data }: any) => {
+      this.updatedOrder = { where, data };
+      return { id: where.id, ...data };
     },
   };
 }
@@ -70,5 +94,28 @@ describe('checkout create-order', () => {
       .send({ items: [{ productId: 1, qty: 5 }] })
       .expect(400);
     expect(prisma.createdOrder).toBeNull();
+  });
+});
+
+describe('checkout create-preference', () => {
+  it('creates a MercadoPago preference and stores id', async () => {
+    prisma.orderToFind = {
+      id: 123,
+      items: [
+        {
+          qty: 2,
+          unit_price_cents: 10000,
+          product: { name: 'Prod 1' },
+        },
+      ],
+    };
+
+    const res = await request(app)
+      .post('/checkout/create-preference')
+      .send({ orderId: 123 })
+      .expect(200);
+
+    expect(res.body.init_point).toBe('http://mp/init');
+    expect(prisma.updatedOrder?.data.mp_preference_id).toBe('pref123');
   });
 });

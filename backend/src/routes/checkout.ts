@@ -1,5 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
+import { MercadoPagoConfig, Preference } from 'mercadopago';
 import type { PrismaClient } from '@prisma/client';
 
 const createOrderSchema = z.object({
@@ -64,6 +65,52 @@ export function createCheckoutRouter(prisma: PrismaClient) {
       });
 
       res.json({ orderId: order.id, total_cents: order.total_cents });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  router.post('/create-preference', async (req, res, next) => {
+    const schema = z.object({ orderId: z.number().int().positive() });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.flatten() });
+    }
+    const { orderId } = parsed.data;
+
+    try {
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: { items: { include: { product: true } } },
+      });
+      if (!order) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+
+      const mp = new MercadoPagoConfig({
+        accessToken: process.env.MP_ACCESS_TOKEN || '',
+      });
+      const preference = await new Preference(mp).create({
+        items: order.items.map((item) => ({
+          title: item.product.name,
+          quantity: item.qty,
+          unit_price: item.unit_price_cents / 100,
+          currency_id: 'MXN',
+        })),
+        back_urls: {
+          success: `${process.env.CORS_ORIGIN}/checkout/success`,
+          failure: `${process.env.CORS_ORIGIN}/checkout/failure`,
+          pending: `${process.env.CORS_ORIGIN}/checkout/pending`,
+        },
+        auto_return: 'approved',
+      });
+
+      await prisma.order.update({
+        where: { id: orderId },
+        data: { mp_preference_id: preference.id },
+      });
+
+      res.json({ init_point: preference.init_point });
     } catch (err) {
       next(err);
     }
