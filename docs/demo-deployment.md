@@ -22,7 +22,7 @@ CORS_ORIGIN=https://demo.example.com
 2. Set the environment variable used by Vite:
 
 ```
-VITE_API_BASE_URL=https://your-backend.example.com
+VITE_API_URL=https://your-backend.example.com
 ```
 
 ## Domain

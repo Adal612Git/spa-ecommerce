@@ -54,7 +54,8 @@ const subtotal = computed(() => cartStore.subtotal);
 const total = computed(() => cartStore.total);
 const currency = computed(() => cart.value[0]?.currency || 'USD');
 const $q = useQuasar();
-const apiBase = import.meta.env.VITE_API_BASE_URL;
+const apiBase =
+  import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
 
 async function pay() {
   try {
