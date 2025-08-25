@@ -11,6 +11,8 @@ import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import type { PrismaClient } from '@prisma/client';
 // eslint-disable-next-line import/no-unresolved
 import { createAuthRouter } from './routes/auth.js';
+// eslint-disable-next-line import/no-unresolved
+import { createProductsRouter } from './routes/products.js';
 
 interface RequestWithLog extends express.Request {
   log?: Logger;
@@ -64,6 +66,7 @@ export function createApp(prisma: PrismaClient) {
   });
 
   app.use('/auth', createAuthRouter(prisma));
+  app.use('/products', createProductsRouter(prisma));
 
   app.get('/api/users', async (req, res, next) => {
     try {
@@ -87,10 +90,10 @@ export function createApp(prisma: PrismaClient) {
     ) => {
       (req as RequestWithLog).log?.error?.(err);
       if (err instanceof Error && 'flatten' in err) {
-        res.status(400).json({ ok: false, error: 'Bad Request' });
+        res.status(400).json({ error: 'Bad Request' });
         return;
       }
-      res.status(500).json({ ok: false, error: 'Internal Server Error' });
+      res.status(500).json({ error: 'Internal Server Error' });
     },
   );
 
