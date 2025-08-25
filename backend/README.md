@@ -16,6 +16,8 @@
 - `CORS_ORIGIN` — origen permitido para CORS (`*` por defecto)
 - `JWT_SECRET` — secreto para firmar JWT
 - `JWT_EXPIRES_IN` — expiración del token (ej. `7d`)
+- `MP_ACCESS_TOKEN` — token de acceso de MercadoPago
+- `MP_ALLOWED_IPS` — IPs permitidas para webhooks de MercadoPago (separadas por coma)
 
 ## Rutas
 

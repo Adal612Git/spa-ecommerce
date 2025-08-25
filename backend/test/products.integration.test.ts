@@ -1,8 +1,15 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
 import type { PrismaClient } from '@prisma/client';
 
 let createApp: typeof import('../src/app.js').createApp;
+
+vi.mock('mercadopago', () => ({
+  MercadoPagoConfig: vi.fn().mockImplementation(() => ({})),
+  Preference: vi.fn().mockImplementation(() => ({
+    create: vi.fn(),
+  })),
+}));
 
 process.env.JWT_SECRET = 'testsecret';
 
