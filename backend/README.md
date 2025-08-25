@@ -14,10 +14,15 @@
 
 - `DATABASE_URL` — conexión a Postgres
 - `CORS_ORIGIN` — origen permitido para CORS (`*` por defecto)
+- `JWT_SECRET` — secreto para firmar JWT
+- `JWT_EXPIRES_IN` — expiración del token (ej. `7d`)
 
 ## Rutas
 
 - `GET /health` → `{ "ok": true, "service": "spa-ecommerce-backend" }`
+- `POST /auth/register` → crea usuario `{ id, email, name, role, createdAt }`
+- `POST /auth/login` → `{ token }`
+- `GET /auth/me` → usuario autenticado `{ id, email, name, role, createdAt }`
 - `GET /api/users` → `[ { id, email, name, role, createdAt }, ... ]`
 
 ## Cómo correr
