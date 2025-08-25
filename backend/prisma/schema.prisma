@@ -35,5 +35,27 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  order_items OrderItem[]
+
   @@index([is_active])
+}
+
+model Order {
+  id          Int        @id @default(autoincrement())
+  status      String
+  currency    String     @default("MXN")
+  total_cents Int
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  items       OrderItem[]
+}
+
+model OrderItem {
+  id               Int     @id @default(autoincrement())
+  order            Order   @relation(fields: [orderId], references: [id])
+  orderId          Int
+  product          Product @relation(fields: [productId], references: [id])
+  productId        Int
+  qty              Int
+  unit_price_cents Int
 }
