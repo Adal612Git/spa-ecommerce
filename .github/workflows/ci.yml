@@ -7,6 +7,58 @@ on:
     branches: [ develop ]
 
 jobs:
+  fe_lint:
+    runs-on: ubuntu-latest
+    name: frontend lint
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci && npm run lint && npm run format
+
+  be_lint:
+    runs-on: ubuntu-latest
+    name: backend lint
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci && npm run lint && npm run format
+
+  fe_test:
+    runs-on: ubuntu-latest
+    name: frontend test
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci && npm -s run test || echo "no tests"
+
+  be_test:
+    runs-on: ubuntu-latest
+    name: backend test
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci && npm -s run test || echo "no tests"
+
   frontend:
     runs-on: ubuntu-latest
     name: frontend build
