@@ -49,6 +49,7 @@ model Order {
   updatedAt   DateTime   @updatedAt
   mp_preference_id String?
   items       OrderItem[]
+  paymentEvents PaymentEvent[]
 }
 
 model OrderItem {
@@ -59,4 +60,14 @@ model OrderItem {
   productId        Int
   qty              Int
   unit_price_cents Int
+}
+
+model PaymentEvent {
+  id            Int      @id @default(autoincrement())
+  order         Order    @relation(fields: [orderId], references: [id])
+  orderId       Int
+  mp_payment_id String   @unique
+  status        String
+  raw_payload   Json
+  processed_at  DateTime @default(now())
 }

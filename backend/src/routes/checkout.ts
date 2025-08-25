@@ -103,6 +103,7 @@ export function createCheckoutRouter(prisma: PrismaClient) {
           pending: `${process.env.CORS_ORIGIN}/checkout/pending`,
         },
         auto_return: 'approved',
+        external_reference: orderId.toString(),
       });
 
       await prisma.order.update({
