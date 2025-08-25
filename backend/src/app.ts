@@ -13,6 +13,8 @@ import type { PrismaClient } from '@prisma/client';
 import { createAuthRouter } from './routes/auth.js';
 // eslint-disable-next-line import/no-unresolved
 import { createProductsRouter } from './routes/products.js';
+// eslint-disable-next-line import/no-unresolved
+import { createCheckoutRouter } from './routes/checkout.js';
 
 interface RequestWithLog extends express.Request {
   log?: Logger;
@@ -67,6 +69,7 @@ export function createApp(prisma: PrismaClient) {
 
   app.use('/auth', createAuthRouter(prisma));
   app.use('/products', createProductsRouter(prisma));
+  app.use('/checkout', createCheckoutRouter(prisma));
 
   app.get('/api/users', async (req, res, next) => {
     try {
