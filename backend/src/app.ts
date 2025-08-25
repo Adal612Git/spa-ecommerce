@@ -30,6 +30,7 @@ export function createApp(prisma: PrismaClient) {
     (pinoHttp as unknown as (opts?: Options) => express.RequestHandler)({
       genReqId: () => randomUUID(),
       autoLogging: true,
+      redact: ['req.headers.authorization'],
       transport:
         process.env.NODE_ENV === 'production'
           ? undefined
