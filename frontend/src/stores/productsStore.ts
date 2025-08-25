@@ -48,7 +48,6 @@ export const useProductsStore = defineStore('products', {
     async fetchProducts(
       page = 1,
       limit = 12,
-      filters: Filters = this.filters,
       opts: { force?: boolean; prefetch?: boolean } = {},
     ) {
       const { force = false, prefetch = false } = opts;
@@ -64,8 +63,8 @@ export const useProductsStore = defineStore('products', {
           page: page.toString(),
           limit: limit.toString(),
         });
-        if (filters.text) params.append('text', filters.text);
-        if (filters.category) params.append('category', filters.category);
+        if (this.filters.text) params.append('text', this.filters.text);
+        if (this.filters.category) params.append('category', this.filters.category);
         const res = await fetch(`/products?${params.toString()}`);
         if (!res.ok) throw new Error('Failed to fetch products');
         const json = await res.json();

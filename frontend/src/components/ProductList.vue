@@ -60,4 +60,12 @@ onMounted(() => {
 watch(page, (p) => {
   fetchPage(p);
 });
+
+watch(
+  () => store.filters,
+  () => {
+    page.value = 1;
+  },
+  { deep: true },
+);
 </script>
