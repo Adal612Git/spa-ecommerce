@@ -24,19 +24,59 @@ interface RequestWithLog extends express.Request {
 
 export function createApp(prisma: PrismaClient) {
   const app = express();
-  const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
+  const allowedOrigins = (process.env.CORS_ORIGIN || 'https://mi-front.com')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
   const JWT_SECRET = process.env.JWT_SECRET ?? '';
 
   app.use(helmet());
-  app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
+  app.use(helmet.hsts({ maxAge: 31_536_000, includeSubDomains: true, preload: true }));
+  app.use(helmet.noSniff());
+  app.use(helmet.xssFilter());
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+        return callback(new Error('Not allowed by CORS'));
+      },
+      credentials: true,
+    }),
+  );
   app.use(express.json());
-  app.use(rateLimit({ windowMs: 60_000, limit: 100 }));
+
+  const authLimiter = rateLimit({
+    windowMs: 60_000,
+    limit: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  const webhookLimiter = rateLimit({
+    windowMs: 60_000,
+    limit: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
 
   app.use(
     (pinoHttp as unknown as (opts?: Options) => express.RequestHandler)({
       genReqId: () => randomUUID(),
       autoLogging: true,
-      redact: ['req.headers.authorization'],
+      redact: {
+        paths: [
+          'req.headers.authorization',
+          'req.headers.cookie',
+          'req.body.password',
+          'req.body.token',
+          'req.body.refreshToken',
+          'req.body.cardNumber',
+          'req.body.cvv',
+        ],
+        censor: '[REDACTED]',
+      },
       transport:
         process.env.NODE_ENV === 'production'
           ? undefined
@@ -69,9 +109,10 @@ export function createApp(prisma: PrismaClient) {
     res.json({ ok: true, service: 'spa-ecommerce-backend' });
   });
 
-  app.use('/auth', createAuthRouter(prisma));
+  app.use('/auth', authLimiter, createAuthRouter(prisma));
   app.use('/products', createProductsRouter(prisma));
   app.use('/checkout', createCheckoutRouter(prisma));
+  app.use('/webhook/mercadopago', webhookLimiter);
   app.use('/webhook', createWebhookRouter(prisma));
 
   app.get('/api/users', async (req, res, next) => {

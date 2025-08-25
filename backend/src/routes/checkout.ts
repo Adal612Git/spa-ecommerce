@@ -10,7 +10,7 @@ const createOrderSchema = z.object({
       z.object({
         productId: z.number().int().positive(),
         qty: z.number().int().positive(),
-      })
+      }),
     )
     .min(1),
 });

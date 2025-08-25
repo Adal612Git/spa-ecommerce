@@ -13,11 +13,20 @@
 ## Variables
 
 - `DATABASE_URL` — conexión a Postgres
-- `CORS_ORIGIN` — origen permitido para CORS (`*` por defecto)
+- `CORS_ORIGIN` — orígenes permitidos para CORS separados por coma (ej. `https://mi-front.com`)
 - `JWT_SECRET` — secreto para firmar JWT
 - `JWT_EXPIRES_IN` — expiración del token (ej. `7d`)
 - `MP_ACCESS_TOKEN` — token de acceso de MercadoPago
 - `MP_ALLOWED_IPS` — IPs permitidas para webhooks de MercadoPago (separadas por coma)
+
+## Seguridad
+
+- `helmet` aplicado con HSTS, XSS Filter y `noSniff`.
+- CORS restringido a los dominios definidos en `CORS_ORIGIN`.
+- Rate limiting con `express-rate-limit`:
+  - `/auth/*` → 5 solicitudes por minuto por IP.
+  - `/webhook/mercadopago` → 30 solicitudes por minuto por IP.
+- Script `scripts/db-backup.sh` para respaldos diarios de la base de datos (ejecutar vía cron).
 
 ## Rutas
 
