@@ -86,7 +86,7 @@ export function createWebhookRouter(prisma: PrismaClient) {
       const updatedStocks: { productId: number; stock: number }[] = [];
       await prisma.$transaction(async (tx) => {
         interface OrderWithItems {
-          items: { productId: number; qty: number }[];
+          items: { productId: number; quantity: number }[];
           userId?: string;
         }
         const order = (await tx.order.update({
@@ -100,8 +100,8 @@ export function createWebhookRouter(prisma: PrismaClient) {
         if (orderStatus === 'APPROVED') {
           for (const item of order.items) {
             const updated = await tx.product.updateMany({
-              where: { id: item.productId, stock: { gte: item.qty } },
-              data: { stock: { decrement: item.qty } },
+              where: { id: item.productId, stock: { gte: item.quantity } },
+              data: { stock: { decrement: item.quantity } },
             });
             if (updated.count === 0) {
               throw new Error(`Insufficient stock for product ${item.productId}`);

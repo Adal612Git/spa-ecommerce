@@ -91,7 +91,10 @@ describe('checkout create-order', () => {
     const res = await request(app)
       .post('/checkout/create-order')
       .send({
-        items: [{ productId: 1, qty: 2 }, { productId: 5, qty: 1 }],
+        items: [
+          { productId: 1, quantity: 2 },
+          { productId: 5, quantity: 1 },
+        ],
         zone: 'NORTE',
       })
       .expect(200);
@@ -102,15 +105,15 @@ describe('checkout create-order', () => {
     expect(prisma.createdOrder.total_cents).toBe(80400);
     expect(prisma.createdOrder.shipping_cents).toBe(500);
     expect(prisma.createdOrder.items.create).toEqual([
-      { productId: 1, qty: 2, unit_price_cents: 10000 },
-      { productId: 5, qty: 1, unit_price_cents: 59900 },
+      { productId: 1, quantity: 2, unitPriceCents: 10000 },
+      { productId: 5, quantity: 1, unitPriceCents: 59900 },
     ]);
   });
 
-  it('fails when qty exceeds stock', async () => {
+  it('fails when quantity exceeds stock', async () => {
     await request(app)
       .post('/checkout/create-order')
-      .send({ items: [{ productId: 1, qty: 5 }], zone: 'NORTE' })
+      .send({ items: [{ productId: 1, quantity: 5 }], zone: 'NORTE' })
       .expect(400);
     expect(prisma.createdOrder).toBeNull();
   });
@@ -122,8 +125,8 @@ describe('checkout create-preference', () => {
       id: 123,
       items: [
         {
-          qty: 2,
-          unit_price_cents: 10000,
+          quantity: 2,
+          unitPriceCents: 10000,
           product: { name: 'Prod 1' },
         },
       ],

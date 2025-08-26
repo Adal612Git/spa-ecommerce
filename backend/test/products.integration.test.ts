@@ -22,14 +22,19 @@ interface Product {
   currency: string;
   stock: number;
   image_url: string | null;
-  is_active: boolean;
+  status: string;
+  deleted: boolean;
+  category: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
 function matches(where: any, p: Product) {
-  if (where.is_active !== undefined && p.is_active !== where.is_active) return false;
+  if (where.id !== undefined && p.id !== where.id) return false;
+  if (where.status && p.status !== where.status) return false;
+  if (where.deleted !== undefined && p.deleted !== where.deleted) return false;
   if (where.slug && p.slug !== where.slug) return false;
+  if (where.category && p.category !== where.category) return false;
   if (where.OR) {
     const search = where.OR[0].name?.contains || where.OR[1].description?.contains;
     const s = String(search).toLowerCase();
@@ -51,7 +56,9 @@ class FakePrisma {
       currency: 'MXN',
       stock: 1,
       image_url: null,
-      is_active: true,
+      status: 'ACTIVE',
+      deleted: false,
+      category: 'cat1',
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -64,7 +71,9 @@ class FakePrisma {
       currency: 'MXN',
       stock: 2,
       image_url: null,
-      is_active: false,
+      status: 'INACTIVE',
+      deleted: false,
+      category: 'cat1',
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -77,7 +86,9 @@ class FakePrisma {
       currency: 'MXN',
       stock: 3,
       image_url: null,
-      is_active: true,
+      status: 'ACTIVE',
+      deleted: false,
+      category: 'cat2',
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -116,9 +127,15 @@ describe('products endpoints', () => {
     expect(res.body.data[0].name).toBe('Alpha');
   });
 
-  it('gets a product by slug', async () => {
-    const res = await request(app).get('/products/alpha').expect(200);
+  it('filters products by category', async () => {
+    const res = await request(app).get('/products?category=cat1').expect(200);
+    expect(res.body.data).toHaveLength(1);
+    expect(res.body.data[0].slug).toBe('alpha');
+  });
+
+  it('gets a product by id', async () => {
+    const res = await request(app).get('/products/1').expect(200);
     expect(res.body.slug).toBe('alpha');
-    await request(app).get('/products/beta').expect(404);
+    await request(app).get('/products/2').expect(404);
   });
 });
