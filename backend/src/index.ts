@@ -2,6 +2,7 @@ import express from 'express';
 import passport from 'passport';
 import { PrismaClient } from '@prisma/client';
 import { createAdminRouter } from './routes/admin.js';
+import { createReviewsRouter } from './routes/reviews.js';
 import './middleware/auth.js';
 
 const app = express();
@@ -10,6 +11,7 @@ const prisma = new PrismaClient();
 app.use(express.json());
 app.use(passport.initialize());
 
+app.use('/api/admin/reviews', createReviewsRouter(prisma));
 app.use('/api/admin', createAdminRouter(prisma));
 
 const PORT = process.env.PORT || 3000;

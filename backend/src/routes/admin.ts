@@ -3,7 +3,17 @@ import multer from 'multer';
 import { PrismaClient, OrderStatus } from '@prisma/client';
 import { authenticate } from '../middleware/auth.js';
 import { requireRole } from '../middleware/role.js';
-import { uploadImage } from '../utils/s3.js';
+import { uploadImage as uploadS3 } from '../utils/s3.js';
+import { uploadImage as uploadGCS } from '../utils/gcs.js';
+
+const uploadImage = (
+  filePath: string,
+  fileName: string,
+): Promise<string> => {
+  return process.env.STORAGE_PROVIDER === 'gcs'
+    ? uploadGCS(filePath, fileName)
+    : uploadS3(filePath, fileName);
+};
 
 const upload = multer({ dest: 'uploads/' });
 
