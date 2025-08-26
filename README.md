@@ -36,14 +36,14 @@ docker compose up --build
 ## Licencia
 [MIT](LICENSE)
 
-## Demo Deployment
+## Deploy Demo
 
-Ejemplo rápido de cómo publicar una demo en producción usando **Render** para el backend y **Vercel** para el frontend. Revisa `.env.demo` para valores de referencia.
+Guía para publicar una demo con backend y frontend reales usando credenciales **sandbox**. Revisa `.env.demo` para valores de referencia.
 
 ### Backend (Render)
 
-1. Crea un servicio desde la carpeta `backend`.
-2. Configura variables de entorno:
+1. Render puede leer `render.yaml` y crear un servicio web HTTPS para la carpeta `backend`.
+2. Define las variables de entorno del archivo `.env.demo`:
 
    ```
    DATABASE_URL=postgresql://demo_user:demo_pass@demo-db:5432/spa_ecommerce
@@ -53,20 +53,17 @@ Ejemplo rápido de cómo publicar una demo en producción usando **Render** para
    CORS_ORIGIN=https://demo.miapp.com
    ```
 
-3. Usa `npm install && npm run build` como comando de build y `npm run start` como start command.
+3. Usa `npm install && npm run build` como build command y `npm run start` como start command.
+4. Render expone automáticamente el servicio con HTTPS.
 
 ### Frontend (Vercel)
 
-1. Despliega la carpeta `frontend` como proyecto estático.
-2. Define la variable de entorno:
-
-   ```
-   VITE_API_URL=https://<tu-backend-demonstrativo>
-   ```
-
-3. Vercel detectará el framework y construirá con `npm install && npm run build`.
+1. Despliega la carpeta `frontend` empleando la configuración de `frontend/vercel.json`.
+2. Configura la variable de entorno `VITE_API_URL` apuntando al backend (p.ej. `https://api.demo.miapp.com`).
+3. Vercel ejecutará `npm install && npm run build` y publicará `dist/spa` con HTTPS.
 
 ### Dominio y MercadoPago
 
-- Apunta un dominio (p.ej. `demo.miapp.com`) al frontend y habilita HTTPS.
-- Utiliza credenciales **sandbox** de MercadoPago para todas las pruebas.
+- Apunta un dominio público, como `demo.miapp.com`, al despliegue del frontend y habilita HTTPS.
+- El backend puede exponerse como `api.demo.miapp.com` o usar el dominio por defecto de Render.
+- Ejecuta el flujo de pago con credenciales **sandbox** de MercadoPago para verificar la integración.
