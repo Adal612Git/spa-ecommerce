@@ -1,5 +1,5 @@
 import express from 'express';
-import type { Prisma, PrismaClient } from '@prisma/client';
+import type { Prisma, PrismaClient, ProductStatus } from '@prisma/client';
 
 export function createProductsRouter(prisma: PrismaClient) {
   const router = express.Router();
@@ -10,7 +10,10 @@ export function createProductsRouter(prisma: PrismaClient) {
     const search = (req.query.search as string) || '';
 
     try {
-      const where: Prisma.ProductWhereInput = { is_active: true };
+      const where: Prisma.ProductWhereInput = {
+        deleted: false,
+        status: ProductStatus.ACTIVE,
+      };
       if (search) {
         where.OR = [
           { name: { contains: search, mode: 'insensitive' } },
@@ -34,14 +37,37 @@ export function createProductsRouter(prisma: PrismaClient) {
     }
   });
 
-  router.get('/:slug', async (req, res, next) => {
-    const { slug } = req.params;
+  router.get('/:id', async (req, res, next) => {
+    const { id } = req.params;
     try {
-      const product = await prisma.product.findFirst({ where: { slug, is_active: true } });
+      const product = await prisma.product.findFirst({
+        where: { id: Number(id), deleted: false, status: ProductStatus.ACTIVE },
+        include: { images: true },
+      });
       if (!product) {
         return res.status(404).json({ error: 'Not Found' });
       }
       res.json(product);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  router.get('/:id/meta', async (req, res, next) => {
+    const { id } = req.params;
+    try {
+      const product = await prisma.product.findFirst({
+        where: { id: Number(id), deleted: false, status: ProductStatus.ACTIVE },
+        include: { images: { select: { url: true }, take: 1 } },
+      });
+      if (!product) {
+        return res.status(404).json({ error: 'Not Found' });
+      }
+      res.json({
+        title: product.name,
+        description: product.description,
+        image: product.images[0]?.url ?? '',
+      });
     } catch (err) {
       next(err);
     }
