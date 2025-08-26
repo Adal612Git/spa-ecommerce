@@ -1,0 +1,8 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/spa",
+  "framework": "vite",
+  "env": {
+    "VITE_API_URL": "https://api.demo.miapp.com"
+  }
+}

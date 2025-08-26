@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: spa-ecommerce-demo
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://demo_user:demo_pass@demo-db:5432/spa_ecommerce
+      - key: JWT_SECRET
+        value: demo_supersecret
+      - key: MP_ACCESS_TOKEN
+        value: TEST-1234567890123456-012345-1234567890abcdef-012345-abcdef1234567890abcdef1234567890-012345678
+      - key: MP_ALLOWED_IPS
+        value: 0.0.0.0/0
+      - key: CORS_ORIGIN
+        value: https://demo.miapp.com
