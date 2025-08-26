@@ -23,6 +23,10 @@ import { createWebhookRouter } from './routes/webhook.js';
 import { createAdminRouter } from './routes/admin.js';
 // eslint-disable-next-line import/no-unresolved
 import { createReviewsRouter } from './routes/reviews.js';
+// eslint-disable-next-line import/no-unresolved
+import { createCouponsRouter } from './routes/coupons.js';
+// eslint-disable-next-line import/no-unresolved
+import { createShippingRouter } from './routes/shipping.js';
 
 interface RequestWithLog extends express.Request {
   log?: Logger;
@@ -147,6 +151,8 @@ export function createApp(prisma: PrismaClient) {
   app.use('/webhook', createWebhookRouter(prisma));
   app.use('/admin/reviews', createReviewsRouter(prisma));
   app.use('/admin', createAdminRouter(prisma));
+  app.use('/api/coupons', createCouponsRouter(prisma));
+  app.use('/api/shipping', createShippingRouter(prisma));
 
   app.get('/api/users', async (req, res, next) => {
     try {
