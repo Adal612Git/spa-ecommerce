@@ -152,6 +152,7 @@ export function createApp(prisma: PrismaClient) {
 
   app.use('/auth', authLimiter, createAuthRouter(prisma));
   app.use('/products', createProductsRouter(prisma));
+  app.use('/api/orders', createOrdersRouter(prisma));
   app.use('/checkout', createOrdersRouter(prisma));
   app.use('/webhook/mercadopago', webhookLimiter);
   app.use('/webhook', createWebhookRouter(prisma));

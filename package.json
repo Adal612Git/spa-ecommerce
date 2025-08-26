@@ -5,10 +5,14 @@
   "type": "module",
   "workspaces": ["backend", "frontend"],
   "scripts": {
-    "e2e": "MP_USE_MOCK=1 start-server-and-test \"npm run dev -w backend\" http://localhost:3000/health \"cypress run\""
+    "e2e": "MP_USE_MOCK=1 start-server-and-test \"npm run dev -w backend\" http://localhost:3000/health \"cypress run\"",
+    "test": "vitest run tests"
   },
   "devDependencies": {
     "cypress": "^13.7.0",
-    "start-server-and-test": "^2.0.5"
+    "socket.io-client": "^4.7.5",
+    "start-server-and-test": "^2.0.5",
+    "supertest": "^7.1.1",
+    "vitest": "^1.6.0"
   }
 }

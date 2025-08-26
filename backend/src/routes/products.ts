@@ -44,11 +44,11 @@ export function createProductsRouter(prisma: PrismaClient) {
     }
   });
 
-  router.get('/:id', async (req, res, next) => {
-    const { id } = req.params;
+  router.get('/:slug', async (req, res, next) => {
+    const { slug } = req.params;
     try {
       const product = await prisma.product.findFirst({
-        where: { id: Number(id), deleted: false, status: ProductStatus.ACTIVE },
+        where: { slug, deleted: false, status: ProductStatus.ACTIVE },
         include: { images: true },
       });
       if (!product) {
@@ -60,11 +60,11 @@ export function createProductsRouter(prisma: PrismaClient) {
     }
   });
 
-  router.get('/:id/meta', async (req, res, next) => {
-    const { id } = req.params;
+  router.get('/:slug/meta', async (req, res, next) => {
+    const { slug } = req.params;
     try {
       const product = await prisma.product.findFirst({
-        where: { id: Number(id), deleted: false, status: ProductStatus.ACTIVE },
+        where: { slug, deleted: false, status: ProductStatus.ACTIVE },
         include: { images: { select: { url: true }, take: 1 } },
       });
       if (!product) {

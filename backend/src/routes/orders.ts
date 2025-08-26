@@ -2,10 +2,12 @@ import express from 'express';
 import { z } from 'zod';
 // eslint-disable-next-line import/no-unresolved
 import { MercadoPagoConfig, Preference } from 'mercadopago';
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient, User } from '@prisma/client';
 import type { Counter } from 'prom-client';
 // eslint-disable-next-line import/no-unresolved
 import { sendMail } from '../utils/mailer.js';
+// eslint-disable-next-line import/no-unresolved
+import { authenticate } from '../middleware/auth.js';
 
 const createOrderSchema = z.object({
   email: z.string().email().optional(),
@@ -26,6 +28,37 @@ export function createOrdersRouter(
   orderCounter?: Counter,
 ) {
   const router = express.Router();
+
+  router.get('/', authenticate, async (req, res, next) => {
+    try {
+      const user = req.user as User;
+      const orders = await prisma.order.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
+        include: { items: { include: { product: true } } },
+      });
+      res.json(orders);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  router.get('/:id', authenticate, async (req, res, next) => {
+    try {
+      const user = req.user as User;
+      const id = Number(req.params.id);
+      const order = await prisma.order.findFirst({
+        where: { id, userId: user.id },
+        include: { items: { include: { product: true } } },
+      });
+      if (!order) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+      res.json(order);
+    } catch (err) {
+      next(err);
+    }
+  });
 
   router.post('/create-order', async (req, res, next) => {
     const parsed = createOrderSchema.safeParse(req.body);
@@ -53,7 +86,7 @@ export function createOrdersRouter(
 
       const total = items.reduce((sum, item) => {
         const product = productMap.get(item.productId)!;
-        return sum + item.quantity * product.price_cents;
+        return sum + item.quantity * product.priceCents;
       }, 0);
 
       const weight = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -82,7 +115,7 @@ export function createOrdersRouter(
         data: {
           status: 'PENDING',
           currency: 'MXN',
-          total_cents: total - discount + shippingCents,
+          totalCents: total - discount + shippingCents,
           shipping_cents: shippingCents,
           items: {
             create: items.map((item) => {
@@ -90,7 +123,7 @@ export function createOrdersRouter(
               return {
                 productId: item.productId,
                 quantity: item.quantity,
-                unitPriceCents: product.price_cents,
+                unitPriceCents: product.priceCents,
               };
             }),
           },
@@ -109,11 +142,11 @@ export function createOrdersRouter(
         await sendMail({
           to: email,
           subject: 'Pedido confirmado',
-          text: `Tu pedido #${order.id} ha sido creado. Total: ${(order.total_cents / 100).toFixed(2)} MXN`,
+          text: `Tu pedido #${order.id} ha sido creado. Total: ${(order.totalCents / 100).toFixed(2)} MXN`,
         });
       }
 
-      res.json({ orderId: order.id, total_cents: order.total_cents });
+      res.json({ orderId: order.id, totalCents: order.totalCents });
     } catch (err) {
       next(err);
     }
