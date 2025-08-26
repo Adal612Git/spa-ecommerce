@@ -32,6 +32,11 @@ enum ReviewStatus {
   REJECTED
 }
 
+enum CouponType {
+  PERCENTAGE
+  FIXED
+}
+
 model User {
   id           Int      @id @default(autoincrement())
   email        String   @unique
@@ -96,4 +101,23 @@ model Review {
   comment   String
   status    ReviewStatus @default(PENDING)
   createdAt DateTime     @default(now())
+}
+
+model Coupon {
+  id         Int        @id @default(autoincrement())
+  code       String     @unique
+  type       CouponType
+  value      Int
+  expiresAt  DateTime
+  usageLimit Int
+  usedCount  Int        @default(0)
+  createdAt  DateTime   @default(now())
+}
+
+model ShippingRate {
+  id         Int      @id @default(autoincrement())
+  zone       String
+  minWeight  Int
+  maxWeight  Int
+  priceCents Int
 }

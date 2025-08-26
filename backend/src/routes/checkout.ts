@@ -3,8 +3,12 @@ import { z } from 'zod';
 // eslint-disable-next-line import/no-unresolved
 import { MercadoPagoConfig, Preference } from 'mercadopago';
 import type { PrismaClient } from '@prisma/client';
+// eslint-disable-next-line import/no-unresolved
+import { sendMail } from '../utils/mailer.js';
 
 const createOrderSchema = z.object({
+  email: z.string().email().optional(),
+  couponId: z.number().int().optional(),
   items: z
     .array(
       z.object({
@@ -24,7 +28,7 @@ export function createCheckoutRouter(prisma: PrismaClient) {
       return res.status(400).json({ error: parsed.error.flatten() });
     }
 
-    const { items } = parsed.data;
+    const { items, email, couponId } = parsed.data;
     try {
       const ids = items.map((i) => i.productId);
       const products = await prisma.product.findMany({
@@ -47,11 +51,20 @@ export function createCheckoutRouter(prisma: PrismaClient) {
         return sum + item.qty * product.price_cents;
       }, 0);
 
+      let discount = 0;
+      if (couponId) {
+        const coupon = await prisma.coupon.findUnique({ where: { id: couponId } });
+        if (coupon && coupon.usedCount < coupon.usageLimit && coupon.expiresAt > new Date()) {
+          discount = coupon.type === 'PERCENTAGE' ? Math.floor((total * coupon.value) / 100) : coupon.value;
+          if (discount > total) discount = total;
+        }
+      }
+
       const order = await prisma.order.create({
         data: {
           status: 'PENDING',
           currency: 'MXN',
-          total_cents: total,
+          total_cents: total - discount,
           items: {
             create: items.map((item) => {
               const product = productMap.get(item.productId)!;
@@ -64,6 +77,21 @@ export function createCheckoutRouter(prisma: PrismaClient) {
           },
         },
       });
+
+      if (couponId) {
+        await prisma.coupon.update({
+          where: { id: couponId },
+          data: { usedCount: { increment: 1 } },
+        });
+      }
+
+      if (email) {
+        await sendMail({
+          to: email,
+          subject: 'Pedido confirmado',
+          text: `Tu pedido #${order.id} ha sido creado. Total: ${(order.total_cents / 100).toFixed(2)} MXN`,
+        });
+      }
 
       res.json({ orderId: order.id, total_cents: order.total_cents });
     } catch (err) {
