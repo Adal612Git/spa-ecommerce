@@ -1,5 +1,5 @@
 import express from 'express';
-import type { Prisma, PrismaClient, ProductStatus } from '@prisma/client';
+import { Prisma, type PrismaClient, ProductStatus } from '@prisma/client';
 
 export function createProductsRouter(prisma: PrismaClient) {
   const router = express.Router();

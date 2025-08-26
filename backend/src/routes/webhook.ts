@@ -26,18 +26,19 @@ export function createWebhookRouter(prisma: PrismaClient) {
   };
 
   router.post('/mercadopago', allowlist, async (req: RequestWithLog, res) => {
-    const mpPaymentId = req.body?.data?.id ?? req.body?.mp_payment_id ?? req.body?.id;
-    if (!mpPaymentId) {
-      req.log?.warn?.('mp_payment_id missing');
-      return res.status(400).json({ error: 'mp_payment_id missing' });
+    const eventId = req.body?.id ?? req.body?.eventId;
+    const mpPaymentId = req.body?.data?.id ?? req.body?.mp_payment_id;
+    if (!eventId || !mpPaymentId) {
+      req.log?.warn?.('event or payment id missing');
+      return res.status(400).json({ error: 'event id or payment id missing' });
     }
 
     try {
       const exists = await prisma.paymentEvent.findUnique({
-        where: { mp_payment_id: String(mpPaymentId) },
+        where: { eventId: String(eventId) },
       });
       if (exists) {
-        req.log?.info?.({ mp_payment_id: mpPaymentId }, 'Evento duplicado ignorado');
+        req.log?.info?.({ eventId }, 'Evento duplicado ignorado');
         return res.status(200).json({ status: 'ignored' });
       }
 
@@ -118,9 +119,8 @@ export function createWebhookRouter(prisma: PrismaClient) {
         await tx.paymentEvent.create({
           data: {
             orderId,
-            mp_payment_id: String(mpPaymentId),
-            status: orderStatus,
-            raw_payload: req.body as unknown as Prisma.JsonValue,
+            eventId: String(eventId),
+            payload: req.body as unknown as Prisma.JsonValue,
           },
         });
       });
@@ -141,7 +141,7 @@ export function createWebhookRouter(prisma: PrismaClient) {
       res.json({ ok: true });
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-        req.log?.info?.({ mp_payment_id: mpPaymentId }, 'Evento duplicado ignorado');
+        req.log?.info?.({ eventId }, 'Evento duplicado ignorado');
         return res.status(200).json({ status: 'ignored' });
       }
       if (err instanceof Error && err.message.startsWith('Insufficient stock')) {

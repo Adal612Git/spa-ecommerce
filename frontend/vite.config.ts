@@ -16,6 +16,7 @@ export default defineConfig(async ({ mode }) => {
       quasar(),
       prerender({
         routes: ['/', ...productRoutes],
+        staticDir: 'dist',
       }),
     ],
   };

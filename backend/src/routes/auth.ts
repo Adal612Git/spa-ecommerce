@@ -5,6 +5,8 @@ import { z } from 'zod';
 // eslint-disable-next-line import/no-unresolved
 import { hashPassword, verifyPassword } from '../utils/password.js';
 import type { PrismaClient, User } from '@prisma/client';
+// eslint-disable-next-line import/no-unresolved
+import { revokedTokens } from '../middleware/auth.js';
 
 export const registerSchema = z.object({
   email: z.string().email(),
@@ -60,6 +62,14 @@ export function createAuthRouter(prisma: PrismaClient) {
     } catch (err) {
       next(err);
     }
+  });
+
+  router.post('/logout', passport.authenticate('jwt', { session: false }), (req, res) => {
+    const token = req.get('authorization')?.replace('Bearer ', '');
+    if (token) {
+      revokedTokens.add(token);
+    }
+    res.json({ ok: true });
   });
 
   router.get('/me', passport.authenticate('jwt', { session: false }), (req, res) => {
