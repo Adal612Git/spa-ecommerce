@@ -4,9 +4,10 @@ import { quasar, transformAssetUrls } from '@quasar/vite-plugin';
 import prerender from 'vite-plugin-prerender';
 import { fetchProductRoutes } from '../scripts/fetchProductRoutes.js';
 
-export default defineConfig(async ({ mode }) => {
+export default defineConfig(async ({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const productRoutes = await fetchProductRoutes(env.VITE_API_URL);
+  const productRoutes =
+    command === 'build' ? await fetchProductRoutes(env.VITE_API_URL) : [];
 
   return {
     plugins: [

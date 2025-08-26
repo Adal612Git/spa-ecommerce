@@ -24,7 +24,7 @@ describe('checkout flow', () => {
           cy.request({
             method: 'POST',
             url: `${api}/cart`,
-            body: { productId, qty: 1 },
+            body: { productId, quantity: 1 },
             headers: { Authorization: `Bearer ${token}` },
           })
             .its('status')
@@ -37,7 +37,7 @@ describe('checkout flow', () => {
           }).then((cartRes) => {
             const items = cartRes.body.items;
             expect(items).to.have.length(1);
-            expect(items[0]).to.include({ productId, qty: 1 });
+            expect(items[0]).to.include({ productId, quantity: 1 });
 
             cy.request({
               method: 'POST',

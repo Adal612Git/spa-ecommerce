@@ -15,7 +15,7 @@ const createOrderSchema = z.object({
     .array(
       z.object({
         productId: z.number().int().positive(),
-        qty: z.number().int().positive(),
+        quantity: z.number().int().positive(),
       }),
     )
     .min(1),
@@ -46,17 +46,17 @@ export function createOrdersRouter(
       const productMap = new Map(products.map((p) => [p.id, p]));
       for (const item of items) {
         const product = productMap.get(item.productId);
-        if (!product || item.qty > product.stock) {
+        if (!product || item.quantity > product.stock) {
           return res.status(400).json({ error: 'Insufficient stock' });
         }
       }
 
       const total = items.reduce((sum, item) => {
         const product = productMap.get(item.productId)!;
-        return sum + item.qty * product.price_cents;
+        return sum + item.quantity * product.price_cents;
       }, 0);
 
-      const weight = items.reduce((sum, item) => sum + item.qty, 0);
+      const weight = items.reduce((sum, item) => sum + item.quantity, 0);
       const rate = await prisma.shippingRate.findFirst({
         where: {
           zone,
@@ -89,8 +89,8 @@ export function createOrdersRouter(
               const product = productMap.get(item.productId)!;
               return {
                 productId: item.productId,
-                qty: item.qty,
-                unit_price_cents: product.price_cents,
+                quantity: item.quantity,
+                unitPriceCents: product.price_cents,
               };
             }),
           },
@@ -142,8 +142,8 @@ export function createOrdersRouter(
       const preference = await new Preference(mp).create({
         items: order.items.map((item) => ({
           title: item.product.name,
-          quantity: item.qty,
-          unit_price: item.unit_price_cents / 100,
+          quantity: item.quantity,
+          unit_price: item.unitPriceCents / 100,
           currency_id: 'MXN',
         })),
         back_urls: {

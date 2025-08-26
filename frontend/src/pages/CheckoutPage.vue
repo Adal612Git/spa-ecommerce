@@ -99,7 +99,7 @@ async function pay() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        items: cart.value.map((l) => ({ productId: l.productId, qty: l.qty })),
+        items: cart.value.map((l) => ({ productId: l.productId, quantity: l.qty })),
         couponId: couponStore.coupon?.id,
         zone: selectedZone.value,
       }),

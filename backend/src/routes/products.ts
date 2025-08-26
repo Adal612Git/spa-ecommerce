@@ -8,6 +8,7 @@ export function createProductsRouter(prisma: PrismaClient) {
     const page = Number.parseInt(req.query.page as string, 10) || 1;
     const limit = Number.parseInt(req.query.limit as string, 10) || 10;
     const search = (req.query.search as string) || '';
+    const categoryParam = req.query.category;
 
     try {
       const where: Prisma.ProductWhereInput = {
@@ -19,6 +20,12 @@ export function createProductsRouter(prisma: PrismaClient) {
           { name: { contains: search, mode: 'insensitive' } },
           { description: { contains: search, mode: 'insensitive' } },
         ];
+      }
+      if (categoryParam) {
+        if (Array.isArray(categoryParam)) {
+          return res.status(400).json({ error: 'Invalid category' });
+        }
+        where.category = categoryParam;
       }
 
       const [total, products] = await prisma.$transaction([

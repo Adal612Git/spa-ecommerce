@@ -30,11 +30,11 @@ class FakePrisma {
   paymentEvent = {
     findUnique: vi.fn().mockResolvedValue(null),
     create: async ({ data }: any) => {
-      if (this.events.some((e) => e.mp_payment_id === data.mp_payment_id)) {
+      if (this.events.some((e) => e.eventId === data.eventId)) {
         throw new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
           code: 'P2002',
           clientVersion: '6.14.0',
-          meta: { target: ['mp_payment_id'] },
+          meta: { target: ['eventId'] },
         });
       }
       this.events.push(data);
@@ -71,13 +71,13 @@ describe('MercadoPago webhook', () => {
     await request(app)
       .post('/webhook/mercadopago')
       .set('X-Forwarded-For', '1.1.1.1')
-      .send({ data: { id: 'pay123' } })
+      .send({ id: 'evt1', data: { id: 'pay123' } })
       .expect(200);
 
     const res = await request(app)
       .post('/webhook/mercadopago')
       .set('X-Forwarded-For', '1.1.1.1')
-      .send({ data: { id: 'pay123' } })
+      .send({ id: 'evt1', data: { id: 'pay123' } })
       .expect(200);
 
     expect(res.body.status).toBe('ignored');
@@ -88,7 +88,7 @@ describe('MercadoPago webhook', () => {
     await request(app)
       .post('/webhook/mercadopago')
       .set('X-Forwarded-For', '2.2.2.2')
-      .send({ data: { id: 'pay321' } })
+      .send({ id: 'evt2', data: { id: 'pay321' } })
       .expect(403);
   });
 });
