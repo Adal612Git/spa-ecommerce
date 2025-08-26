@@ -1,30 +1,17 @@
-import http from 'http';
-// eslint-disable-next-line import/no-unresolved
-import { Server } from 'socket.io';
-import { PrismaClient } from '@prisma/client';
-// eslint-disable-next-line import/no-unresolved
-import { createApp } from './app.js';
+import express from 'express';
+import passport from 'passport';
+import adminRouter from './routes/admin.js';
+import './middleware/auth.js';
 
-const PORT = Number(process.env.PORT) || 3000;
+const app = express();
+app.use(express.json());
+app.use(passport.initialize());
 
-const prisma = new PrismaClient();
-const app = createApp(prisma);
+app.use('/api/admin', adminRouter);
 
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: process.env.CORS_ORIGIN || '*' },
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`API listening on port ${PORT}`);
 });
 
-app.set('io', io);
-
-io.on('connection', (socket) => {
-  socket.on('join', (room: string) => {
-    socket.join(room);
-  });
-});
-
-server.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`);
-});
-
-export { app, prisma, io };
+export default app;

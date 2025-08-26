@@ -13,11 +13,18 @@ const routes: RouteRecordRaw[] = [
       { path: 'checkout/failure', component: () => import('pages/CheckoutFailurePage.vue') },
       { path: 'checkout/pending', component: () => import('pages/CheckoutPendingPage.vue') },
       { path: 'orders', component: () => import('pages/OrdersPage.vue'), meta: { requiresAuth: true } },
-      {
-        path: 'admin',
-        component: () => import('pages/AdminOrdersPage.vue'),
-        meta: { requiresAuth: true, requiresAdmin: true },
-      },
+    ],
+  },
+
+  {
+    path: '/admin',
+    component: () => import('layouts/AdminLayout.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true },
+    children: [
+      { path: '', component: () => import('pages/admin/ProductsPage.vue') },
+      { path: 'products', component: () => import('pages/admin/ProductsPage.vue') },
+      { path: 'orders', component: () => import('pages/admin/OrdersPage.vue') },
+      { path: 'reviews', component: () => import('pages/admin/ReviewsPage.vue') },
     ],
   },
 
