@@ -56,8 +56,8 @@ describe('checkout flow', () => {
                 .its('status')
                 .should('eq', 200);
 
-              // verify order status updated to APPROVED
-              cy.task('getOrder', orderId).its('status').should('eq', 'APPROVED');
+              // verify order status updated to CONFIRMED
+              cy.task('getOrder', orderId).its('status').should('eq', 'CONFIRMED');
             });
           });
         });
