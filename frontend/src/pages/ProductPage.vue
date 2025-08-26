@@ -16,14 +16,21 @@ import { useMeta } from 'quasar';
 import axios from 'axios';
 
 const route = useRoute();
-const product = ref<any>(null);
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  images?: { url: string }[];
+}
+
+const product = ref<Product | null>(null);
 
 const meta = ref({});
 useMeta(meta);
 
 onMounted(async () => {
-  const id = route.params.id as string;
-  const { data } = await axios.get(`/api/products/${id}`);
+  const slug = route.params.slug as string;
+  const { data } = await axios.get(`/api/products/${slug}`);
   product.value = data;
   meta.value = {
     title: data.name,

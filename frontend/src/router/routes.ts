@@ -13,8 +13,17 @@ const routes: RouteRecordRaw[] = [
       { path: 'checkout/success', component: () => import('pages/CheckoutSuccessPage.vue') },
       { path: 'checkout/failure', component: () => import('pages/CheckoutFailurePage.vue') },
       { path: 'checkout/pending', component: () => import('pages/CheckoutPendingPage.vue') },
-      { path: 'orders', component: () => import('pages/OrdersPage.vue'), meta: { requiresAuth: true } },
-      { path: 'product/:id', component: () => import('pages/ProductPage.vue') },
+      {
+        path: 'orders',
+        component: () => import('pages/OrdersPage.vue'),
+        meta: { requiresAuth: true },
+      },
+      {
+        path: 'orders/:id',
+        component: () => import('pages/OrderDetailPage.vue'),
+        meta: { requiresAuth: true },
+      },
+      { path: 'product/:slug', component: () => import('pages/ProductPage.vue') },
     ],
   },
 
