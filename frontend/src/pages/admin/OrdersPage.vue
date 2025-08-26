@@ -14,7 +14,7 @@ import { ref } from 'vue';
 import { useOrdersStore } from 'src/stores/orders';
 
 const ordersStore = useOrdersStore();
-const statuses = ['PENDING','APPROVED','SHIPPED','CANCELLED'];
+const statuses = ['PENDING','CONFIRMED','SHIPPED','CANCELLED'];
 const columns = [
   { name: 'id', label: 'ID', field: 'id' },
   { name: 'status', label: 'Estado', field: 'status' },

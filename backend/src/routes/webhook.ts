@@ -77,7 +77,7 @@ export function createWebhookRouter(prisma: PrismaClient) {
         const status = String(req.body.payment_status || 'approved');
         switch (status) {
           case 'approved':
-            orderStatus = 'APPROVED';
+            orderStatus = 'CONFIRMED';
             break;
           case 'rejected':
             orderStatus = 'REJECTED';
@@ -94,7 +94,7 @@ export function createWebhookRouter(prisma: PrismaClient) {
         }
         switch (payment.status) {
           case 'approved':
-            orderStatus = 'APPROVED';
+            orderStatus = 'CONFIRMED';
             break;
           case 'rejected':
             orderStatus = 'REJECTED';
@@ -120,7 +120,7 @@ export function createWebhookRouter(prisma: PrismaClient) {
 
         userId = order.userId;
 
-        if (orderStatus === 'APPROVED') {
+        if (orderStatus === 'CONFIRMED') {
           for (const item of order.items) {
             const updated = await tx.product.updateMany({
               where: { id: item.productId, stock: { gte: item.quantity } },
@@ -150,7 +150,7 @@ export function createWebhookRouter(prisma: PrismaClient) {
 
       const io: Server | undefined = req.app.get('io');
       if (io) {
-        if (orderStatus === 'APPROVED' && userId) {
+        if (orderStatus === 'CONFIRMED' && userId) {
           io.to(`user:${userId}`).emit('order:statusChanged', {
             orderId,
             status: orderStatus,
