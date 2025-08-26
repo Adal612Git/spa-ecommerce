@@ -1,73 +1,79 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
+ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+generator client {
+  provider = "prisma-client-js"
+}
+
 enum Role {
+  CUSTOMER
   ADMIN
-  USER
+  MODERATOR
+}
+
+enum OrderStatus {
+  PENDING
+  APPROVED
+  SHIPPED
+  CANCELLED
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
 }
 
 model User {
-  id           String   @id @default(uuid())
+  id           Int      @id @default(autoincrement())
   email        String   @unique
-  name         String?
   passwordHash String
-  role         Role     @default(USER)
+  role         Role     @default(CUSTOMER)
+  orders       Order[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
 
 model Product {
-  id          Int      @id @default(autoincrement())
+  id          Int            @id @default(autoincrement())
   name        String
-  slug        String   @unique
-  description String?
-  price_cents Int
-  currency    String   @default("MXN")
-  stock       Int      @default(0)
-  image_url   String?
-  is_active   Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  description String
+  priceCents  Int
+  category    String?
+  status      ProductStatus  @default(DRAFT)
+  stock       Int            @default(0)
+  deleted     Boolean        @default(false)
+  images      ProductImage[]
+  orderItems  OrderItem[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
 
-  order_items OrderItem[]
-
-  @@index([is_active])
+model ProductImage {
+  id        Int     @id @default(autoincrement())
+  url       String
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int
 }
 
 model Order {
-  id          Int        @id @default(autoincrement())
-  status      String
-  currency    String     @default("MXN")
-  total_cents Int
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  mp_preference_id String?
-  items       OrderItem[]
-  paymentEvents PaymentEvent[]
+  id         Int         @id @default(autoincrement())
+  user       User?       @relation(fields: [userId], references: [id])
+  userId     Int?
+  status     OrderStatus @default(PENDING)
+  totalCents Int
+  items      OrderItem[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 }
 
 model OrderItem {
-  id               Int     @id @default(autoincrement())
-  order            Order   @relation(fields: [orderId], references: [id])
-  orderId          Int
-  product          Product @relation(fields: [productId], references: [id])
-  productId        Int
-  qty              Int
-  unit_price_cents Int
-}
-
-model PaymentEvent {
-  id            Int      @id @default(autoincrement())
-  order         Order    @relation(fields: [orderId], references: [id])
-  orderId       Int
-  mp_payment_id String   @unique
-  status        String
-  raw_payload   Json
-  processed_at  DateTime @default(now())
+  id        Int     @id @default(autoincrement())
+  order     Order   @relation(fields: [orderId], references: [id])
+  orderId   Int
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int
+  quantity  Int
 }
