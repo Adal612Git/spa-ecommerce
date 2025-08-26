@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "workspaces": ["backend", "frontend"],
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
   "scripts": {
     "e2e": "MP_USE_MOCK=1 start-server-and-test \"npm run dev -w backend\" http://localhost:3000/health \"cypress run\"",
     "test": "vitest run tests"
