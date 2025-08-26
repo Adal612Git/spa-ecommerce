@@ -3,10 +3,10 @@ import jwt from 'jsonwebtoken';
 import passport from 'passport';
 import { z } from 'zod';
 // eslint-disable-next-line import/no-unresolved
-import { hashPassword, verifyPassword } from '../utils/password.js';
+import { hashPassword } from '../utils/password.js';
 import type { PrismaClient, User } from '@prisma/client';
 // eslint-disable-next-line import/no-unresolved
-import { revokedTokens } from '../middleware/auth.js';
+import { revokedTokens, setPrismaClient } from '../middleware/auth.js';
 
 export const registerSchema = z.object({
   email: z.string().email(),
@@ -19,6 +19,7 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 export function createAuthRouter(prisma: PrismaClient) {
   const router = express.Router();
+  setPrismaClient(prisma);
 
   router.post('/register', async (req, res, next) => {
     const parsed = registerSchema.safeParse(req.body);
@@ -42,26 +43,22 @@ export function createAuthRouter(prisma: PrismaClient) {
     }
   });
 
-  router.post('/login', async (req, res, next) => {
+  router.post('/login', (req, res, next) => {
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ ok: false, error: parsed.error.flatten() });
     }
-    const { email, password } = parsed.data;
-    try {
-      const user = await prisma.user.findUnique({ where: { email } });
+    req.body = parsed.data;
+    passport.authenticate('local', { session: false }, (err, user) => {
+      if (err) return next(err);
       if (!user) {
         return res.status(401).json({ ok: false, error: 'Invalid credentials' });
       }
-      const valid = await verifyPassword(password, user.passwordHash);
-      if (!valid) {
-        return res.status(401).json({ ok: false, error: 'Invalid credentials' });
-      }
-      const token = jwt.sign({ sub: user.id }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+      const token = jwt.sign({ sub: (user as User).id }, JWT_SECRET, {
+        expiresIn: JWT_EXPIRES_IN,
+      });
       res.json({ token });
-    } catch (err) {
-      next(err);
-    }
+    })(req, res, next);
   });
 
   router.post('/logout', passport.authenticate('jwt', { session: false }), (req, res) => {
