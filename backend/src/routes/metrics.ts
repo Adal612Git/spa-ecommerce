@@ -9,6 +9,14 @@ export function createMetricsRouter(register: Registry) {
     res.end(await register.metrics());
   });
 
+  router.post('/', (req, res) => {
+    // In a real scenario, we'd persist or aggregate these metrics
+    // For now, just log them for visibility
+    // eslint-disable-next-line no-console
+    console.log('Web Vitals metric', req.body);
+    res.status(204).end();
+  });
+
   return router;
 }
 

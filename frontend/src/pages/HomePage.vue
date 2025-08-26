@@ -34,7 +34,7 @@ function onAdd(product: any) {
 }
 
 onMounted(() => {
-  void productStore.fetchProducts(1, 12);
+  void productStore.fetchProducts(1, 12, { force: true });
 });
 </script>
 

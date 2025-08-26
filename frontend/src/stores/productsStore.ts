@@ -11,7 +11,7 @@ export interface Product {
 }
 
 interface Filters {
-  text: string;
+  search: string;
   category: string;
 }
 
@@ -30,7 +30,7 @@ export const useProductsStore = defineStore('products', {
     loading: false,
     error: null,
     filters: {
-      text: '',
+      search: '',
       category: '',
     },
   }),
@@ -40,7 +40,7 @@ export const useProductsStore = defineStore('products', {
   },
   actions: {
     search(query: string) {
-      this.setFilters({ text: query });
+      this.setFilters({ search: query });
     },
     setFilters(newFilters: Partial<Filters>) {
       this.filters = { ...this.filters, ...newFilters };
@@ -66,9 +66,9 @@ export const useProductsStore = defineStore('products', {
           page: page.toString(),
           limit: limit.toString(),
         });
-        if (this.filters.text) params.append('text', this.filters.text);
+        if (this.filters.search) params.append('search', this.filters.search);
         if (this.filters.category) params.append('category', this.filters.category);
-        const res = await fetch(`/products?${params.toString()}`);
+        const res = await fetch(`/api/products?${params.toString()}`);
         if (!res.ok) throw new Error('Failed to fetch products');
         const json = await res.json();
         this.pages[page] = json.data as Product[];
