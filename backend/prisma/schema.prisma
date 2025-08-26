@@ -26,12 +26,19 @@ enum ProductStatus {
   INACTIVE
 }
 
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id           Int      @id @default(autoincrement())
   email        String   @unique
   passwordHash String
   role         Role     @default(CUSTOMER)
   orders       Order[]
+  reviews      Review[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -47,6 +54,7 @@ model Product {
   deleted     Boolean        @default(false)
   images      ProductImage[]
   orderItems  OrderItem[]
+  reviews     Review[]
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 }
@@ -76,4 +84,16 @@ model OrderItem {
   product   Product @relation(fields: [productId], references: [id])
   productId Int
   quantity  Int
+}
+
+model Review {
+  id        Int          @id @default(autoincrement())
+  user      User         @relation(fields: [userId], references: [id])
+  userId    Int
+  product   Product      @relation(fields: [productId], references: [id])
+  productId Int
+  rating    Int
+  comment   String
+  status    ReviewStatus @default(PENDING)
+  createdAt DateTime     @default(now())
 }

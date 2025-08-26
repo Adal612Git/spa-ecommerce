@@ -11,6 +11,7 @@
         <q-item to="/admin/products" clickable>Productos</q-item>
         <q-item to="/admin/orders" clickable>Órdenes</q-item>
         <q-item to="/admin/reviews" clickable>Reseñas</q-item>
+        <q-item to="/admin/stock" clickable>Stock</q-item>
       </q-list>
     </q-drawer>
 

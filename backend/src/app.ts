@@ -21,6 +21,8 @@ import { createCheckoutRouter } from './routes/checkout.js';
 import { createWebhookRouter } from './routes/webhook.js';
 // eslint-disable-next-line import/no-unresolved
 import { createAdminRouter } from './routes/admin.js';
+// eslint-disable-next-line import/no-unresolved
+import { createReviewsRouter } from './routes/reviews.js';
 
 interface RequestWithLog extends express.Request {
   log?: Logger;
@@ -143,6 +145,7 @@ export function createApp(prisma: PrismaClient) {
   app.use('/checkout', createCheckoutRouter(prisma));
   app.use('/webhook/mercadopago', webhookLimiter);
   app.use('/webhook', createWebhookRouter(prisma));
+  app.use('/admin/reviews', createReviewsRouter(prisma));
   app.use('/admin', createAdminRouter(prisma));
 
   app.get('/api/users', async (req, res, next) => {
