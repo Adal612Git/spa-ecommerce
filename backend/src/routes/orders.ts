@@ -3,6 +3,7 @@ import { z } from 'zod';
 // eslint-disable-next-line import/no-unresolved
 import { MercadoPagoConfig, Preference } from 'mercadopago';
 import type { PrismaClient } from '@prisma/client';
+import type { Counter } from 'prom-client';
 // eslint-disable-next-line import/no-unresolved
 import { sendMail } from '../utils/mailer.js';
 
@@ -20,7 +21,10 @@ const createOrderSchema = z.object({
     .min(1),
 });
 
-export function createOrdersRouter(prisma: PrismaClient) {
+export function createOrdersRouter(
+  prisma: PrismaClient,
+  orderCounter?: Counter,
+) {
   const router = express.Router();
 
   router.post('/create-order', async (req, res, next) => {
@@ -92,6 +96,7 @@ export function createOrdersRouter(prisma: PrismaClient) {
           },
         },
       });
+      orderCounter?.inc();
 
       if (couponId) {
         await prisma.coupon.update({

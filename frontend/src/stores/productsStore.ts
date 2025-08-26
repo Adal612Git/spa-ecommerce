@@ -39,6 +39,9 @@ export const useProductsStore = defineStore('products', {
     totalPages: (state) => (limit: number) => Math.ceil(state.total / limit),
   },
   actions: {
+    search(query: string) {
+      this.setFilters({ text: query });
+    },
     setFilters(newFilters: Partial<Filters>) {
       this.filters = { ...this.filters, ...newFilters };
       this.pages = {};

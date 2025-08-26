@@ -82,6 +82,7 @@ export function createWebhookRouter(prisma: PrismaClient) {
 
       let userId: string | undefined;
 
+      const updatedStocks: { productId: number; stock: number }[] = [];
       await prisma.$transaction(async (tx) => {
         interface OrderWithItems {
           items: { productId: number; qty: number }[];
@@ -104,6 +105,13 @@ export function createWebhookRouter(prisma: PrismaClient) {
             if (updated.count === 0) {
               throw new Error(`Insufficient stock for product ${item.productId}`);
             }
+            const prod = await tx.product.findUnique({
+              where: { id: item.productId },
+              select: { id: true, stock: true },
+            });
+            if (prod) {
+              updatedStocks.push({ productId: prod.id, stock: prod.stock });
+            }
           }
         }
 
@@ -118,11 +126,16 @@ export function createWebhookRouter(prisma: PrismaClient) {
       });
 
       const io: Server | undefined = req.app.get('io');
-      if (orderStatus === 'APPROVED' && userId && io) {
-        io.to(`user:${userId}`).emit('order:statusChanged', {
-          orderId,
-          status: orderStatus,
-        });
+      if (io) {
+        if (orderStatus === 'APPROVED' && userId) {
+          io.to(`user:${userId}`).emit('order:statusChanged', {
+            orderId,
+            status: orderStatus,
+          });
+        }
+        for (const s of updatedStocks) {
+          io.emit('stock:updated', s);
+        }
       }
 
       res.json({ ok: true });

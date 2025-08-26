@@ -44,7 +44,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useCartStore } from 'stores/cartStore';
+import { useCartStore } from 'stores/cart';
 import { useCouponStore } from 'stores/coupons';
 import { useShippingStore } from 'stores/shipping';
 import { useQuasar } from 'quasar';
