@@ -8,7 +8,13 @@
       :loading="loading"
       :pagination="pagination"
       @request="onRequest"
-    />
+    >
+      <template #body-cell-status="props">
+        <q-td :props="props">
+          <OrderStatusBadge :status="props.row.status" />
+        </q-td>
+      </template>
+    </q-table>
   </div>
 </template>
 
@@ -16,6 +22,7 @@
 import { ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth';
 import type { QTableProps } from 'quasar';
+import OrderStatusBadge from 'components/OrderStatusBadge.vue';
 
 interface Order {
   id: number;
@@ -75,3 +82,4 @@ function onRequest(props: { pagination: { page: number; rowsPerPage: number } })
 
 fetchOrders();
 </script>
+

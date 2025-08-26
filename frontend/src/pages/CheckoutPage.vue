@@ -36,13 +36,14 @@
         <div>
           Total: {{ (total / 100).toFixed(2) }} {{ currency }}
         </div>
-        <q-btn color="primary" label="Pagar" class="q-mt-md" @click="pay" />
+        <CheckoutButton class="q-mt-md" @click="pay" />
       </div>
     </div>
   </q-page>
 </template>
 
 <script setup lang="ts">
+import CheckoutButton from 'components/CheckoutButton.vue';
 import { ref, computed } from 'vue';
 import { useCartStore } from 'stores/cart';
 import { useCouponStore } from 'stores/coupons';
