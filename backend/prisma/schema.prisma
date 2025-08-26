@@ -52,6 +52,7 @@ model User {
 model Product {
   id          Int            @id @default(autoincrement())
   name        String
+  slug        String         @unique
   description String
   priceCents  Int
   category    String?
