@@ -2,12 +2,14 @@ import { boot } from 'quasar/wrappers';
 import { io, type Socket } from 'socket.io-client';
 import { watch } from 'vue';
 import { useAuthStore } from 'src/stores/auth';
+import { useProductStore } from 'src/stores/product';
 
 let socket: Socket;
 let userRoom: string | null = null;
 
 export default boot(({ app }) => {
   const auth = useAuthStore();
+  const productStore = useProductStore();
 
   const url = (import.meta.env.VITE_BACKEND_URL as string) || 'http://localhost:3000';
   socket = io(url, {
@@ -20,6 +22,10 @@ export default boot(({ app }) => {
     if (userRoom) {
       socket.emit('join', userRoom);
     }
+  });
+
+  socket.on('stock:updated', ({ productId, stock }) => {
+    productStore.applyStockUpdate(productId, stock);
   });
 
   watch(
