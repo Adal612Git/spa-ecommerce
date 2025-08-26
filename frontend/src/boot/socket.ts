@@ -28,6 +28,10 @@ export default boot(({ app }) => {
     productStore.applyStockUpdate(productId, stock);
   });
 
+  socket.on('order:statusChanged', (data) => {
+    console.log('Orden confirmada', data);
+  });
+
   watch(
     () => auth.token,
     (token) => {
