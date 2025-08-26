@@ -55,7 +55,13 @@ export function createApp(prisma: PrismaClient) {
       credentials: true,
     }),
   );
-  app.use(express.json());
+  app.use(
+    express.json({
+      verify: (req, _res, buf) => {
+        (req as express.Request & { rawBody?: string }).rawBody = buf.toString();
+      },
+    }),
+  );
 
   const authLimiter = rateLimit({
     windowMs: 60_000,

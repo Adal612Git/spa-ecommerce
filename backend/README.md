@@ -18,6 +18,7 @@
 - `JWT_EXPIRES_IN` — expiración del token (ej. `7d`)
 - `MP_ACCESS_TOKEN` — token de acceso de MercadoPago
 - `MP_ALLOWED_IPS` — IPs permitidas para webhooks de MercadoPago (separadas por coma)
+- `MP_PUBLIC_KEY` — clave pública para verificar las firmas de MercadoPago
 
 ## Seguridad
 

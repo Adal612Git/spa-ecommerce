@@ -4,9 +4,11 @@ import { Prisma, type PrismaClient } from '@prisma/client';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import type { Logger } from 'pino';
 import type { Server } from 'socket.io';
+import crypto from 'crypto';
 
 interface RequestWithLog extends express.Request {
   log?: Logger;
+  rawBody?: string;
 }
 
 export function createWebhookRouter(prisma: PrismaClient) {
@@ -25,7 +27,28 @@ export function createWebhookRouter(prisma: PrismaClient) {
     next();
   };
 
+  const verifySignature = (header: string, rawBody: string, publicKey: string) => {
+    const match = header.match(/t=(\d+),v1=([^,]+)/);
+    if (!match) return false;
+    const [, timestamp, signature] = match;
+    try {
+      const verifier = crypto.createVerify('RSA-SHA256');
+      verifier.update(`${timestamp}.${rawBody}`);
+      verifier.end();
+      return verifier.verify(publicKey, Buffer.from(signature, 'base64'));
+    } catch {
+      return false;
+    }
+  };
+
   router.post('/mercadopago', allowlist, async (req: RequestWithLog, res) => {
+    const publicKey = process.env.MP_PUBLIC_KEY || '';
+    const signature = req.get('x-meli-signature') || '';
+    if (!publicKey || !verifySignature(signature, req.rawBody || '', publicKey)) {
+      req.log?.warn?.('Invalid MercadoPago signature');
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     const eventId = req.body?.id ?? req.body?.eventId;
     const mpPaymentId = req.body?.data?.id ?? req.body?.mp_payment_id;
     if (!eventId || !mpPaymentId) {
