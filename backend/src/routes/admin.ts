@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import { PrismaClient, OrderStatus } from '@prisma/client';
+import type { Server } from 'socket.io';
 import { authenticate } from '../middleware/auth.js';
 import { requireRole } from '../middleware/role.js';
 import { uploadImage as uploadS3 } from '../utils/s3.js';
@@ -129,6 +130,8 @@ export function createAdminRouter(prisma: PrismaClient) {
         where: { id: Number(req.params.id) },
         data: { stock: Number(stock) },
       });
+      const io: Server | undefined = req.app.get('io');
+      io?.emit('stock:updated', { productId: product.id, stock: product.stock });
       res.json(product);
     }
   );

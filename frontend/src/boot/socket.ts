@@ -13,6 +13,7 @@ export default boot(({ app }) => {
   socket = io(url, {
     autoConnect: false,
     reconnection: true,
+    withCredentials: true,
   });
 
   socket.on('connect', () => {

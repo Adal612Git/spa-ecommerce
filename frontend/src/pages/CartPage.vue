@@ -45,7 +45,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useCartStore } from 'stores/cartStore';
+import { useCartStore } from 'stores/cart';
 import { useQuasar } from 'quasar';
 
 const cartStore = useCartStore();
