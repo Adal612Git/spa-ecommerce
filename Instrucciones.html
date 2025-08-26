@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Guía de Pruebas - SPA E•Commerce</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      max-width: 800px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+    h1, h2 {
+      font-family: 'Poppins', sans-serif;
+      text-align: center;
+      margin-top: 0;
+      background: linear-gradient(90deg, #ff9966, #ff5e62);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    ol.steps li {
+      margin-bottom: 0.75rem;
+    }
+    code {
+      background: #f0f0f0;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-size: 0.95rem;
+    }
+    .checklist label {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    .checklist input[type="checkbox"] {
+      margin-right: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Instalación y Pruebas</h1>
+    <ol class="steps">
+      <li>Clona el repositorio: <code>git clone https://github.com/tu-org/spa-ecommerce.git</code></li>
+      <li>Instala dependencias en la raíz: <code>npm install</code></li>
+      <li>En una terminal, inicia el backend: <code>npm run dev -w backend</code> (puerto 3000)</li>
+      <li>En otra terminal, inicia el frontend: <code>npm run dev -w frontend</code> (puerto 9000)</li>
+      <li>Abre el navegador en <a href="http://localhost:9000">http://localhost:9000</a> y sigue el flujo de compra completo.</li>
+      <li>Para ejecutar las pruebas automáticas: <code>npm test</code></li>
+    </ol>
+    <h2>Checklist de Funcionalidad</h2>
+    <div class="checklist">
+      <label><input type="checkbox" /> Registro, login y logout con validaciones</label>
+      <label><input type="checkbox" /> Catálogo con productos, precios y stock</label>
+      <label><input type="checkbox" /> Carrito con totales correctos</label>
+      <label><input type="checkbox" /> Checkout crea orden <code>PENDING</code></label>
+      <label><input type="checkbox" /> Webhook confirma orden y descuenta stock</label>
+      <label><input type="checkbox" /> Notificación en tiempo real <code>order:statusChanged</code></label>
+    </div>
+  </div>
+</body>
+</html>
