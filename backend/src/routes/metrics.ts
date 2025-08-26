@@ -1,5 +1,10 @@
 import express from 'express';
 import type { Registry } from 'prom-client';
+import type { Logger } from 'pino';
+
+interface RequestWithLog extends express.Request {
+  log?: Logger;
+}
 
 export function createMetricsRouter(register: Registry) {
   const router = express.Router();
@@ -9,11 +14,10 @@ export function createMetricsRouter(register: Registry) {
     res.end(await register.metrics());
   });
 
-  router.post('/', (req, res) => {
+  router.post('/', (req: RequestWithLog, res) => {
     // In a real scenario, we'd persist or aggregate these metrics
-    // For now, just log them for visibility
-    // eslint-disable-next-line no-console
-    console.log('Web Vitals metric', req.body);
+    // For now, just log them for visibility in structured form
+    req.log?.info({ metric: req.body }, 'web-vitals');
     res.status(204).end();
   });
 

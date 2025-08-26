@@ -6,6 +6,9 @@ import jwt from 'jsonwebtoken';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import pino from 'pino';
+import pinoHttp from 'pino-http';
+import { randomUUID } from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import {
   collectDefaultMetrics,
@@ -13,10 +16,13 @@ import {
   Histogram,
   Registry,
 } from 'prom-client';
+import fs from 'fs';
+import { createStream } from 'rotating-file-stream';
 import { createAdminRouter } from './routes/admin.js';
 import { createReviewsRouter } from './routes/reviews.js';
 import { createCartRouter } from './routes/cart.js';
 import { createMetricsRouter } from './routes/metrics.js';
+import { createHealthRouter } from './routes/health.js';
 import { createOrdersRouter } from './routes/orders.js';
 import { createAuthRouter } from './routes/auth.js';
 import { createProductsRouter } from './routes/products.js';
@@ -27,6 +33,55 @@ import './middleware/auth.js';
 
 const app = express();
 const prisma = new PrismaClient();
+
+// Logger setup (JSON structured logs)
+const logDir = 'logs';
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir);
+}
+
+const fileStream = createStream('app.log', {
+  size: '10M',
+  interval: '1d',
+  maxFiles: 7,
+  path: logDir,
+});
+
+const streams = [{ stream: fileStream }];
+if (process.env.NODE_ENV !== 'production') {
+  streams.push({
+    stream: pino.transport({
+      target: 'pino-pretty',
+      options: { translateTime: 'SYS:standard' },
+    }),
+  });
+}
+
+const logger = pino(
+  {
+    redact: {
+      paths: [
+        'req.headers.authorization',
+        'req.headers.cookie',
+        'req.body.password',
+        'req.body.token',
+        'req.body.refreshToken',
+        'req.body.cardNumber',
+        'req.body.cvv',
+      ],
+      censor: '[REDACTED]',
+    },
+  },
+  pino.multistream(streams),
+);
+
+app.use(
+  pinoHttp({
+    genReqId: () => randomUUID(),
+    autoLogging: true,
+    logger,
+  }),
+);
 
 const allowedOrigins = (process.env.CORS_ORIGIN || 'https://mi-front.com')
   .split(',')
@@ -98,6 +153,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use('/api/health', createHealthRouter());
 app.use('/api/metrics', createMetricsRouter(register));
 app.use('/api/auth', authLimiter, createAuthRouter(prisma));
 app.use('/api/products', createProductsRouter(prisma));
@@ -142,16 +198,17 @@ app.set('io', io);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  // eslint-disable-next-line no-console
-  console.log(`API listening on port ${PORT}`);
+  logger.info({ port: PORT }, 'API listening');
 });
 
 process.on('SIGINT', async () => {
+  logger.info('SIGINT received, shutting down');
   await prisma.$disconnect();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
+  logger.info('SIGTERM received, shutting down');
   await prisma.$disconnect();
   process.exit(0);
 });
