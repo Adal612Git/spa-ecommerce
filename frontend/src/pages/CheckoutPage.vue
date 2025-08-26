@@ -91,12 +91,17 @@ async function zoneChanged(val: string) {
 
 async function pay() {
   try {
+    if (!selectedZone.value) {
+      $q.notify({ type: 'negative', message: 'Selecciona una zona de envío' });
+      return;
+    }
     const orderRes = await fetch(`${apiBase}/checkout/create-order`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         items: cart.value.map((l) => ({ productId: l.productId, qty: l.qty })),
         couponId: couponStore.coupon?.id,
+        zone: selectedZone.value,
       }),
     });
     if (!orderRes.ok) throw new Error('Error creando orden');

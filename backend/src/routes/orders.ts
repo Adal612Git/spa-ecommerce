@@ -9,6 +9,7 @@ import { sendMail } from '../utils/mailer.js';
 const createOrderSchema = z.object({
   email: z.string().email().optional(),
   couponId: z.number().int().optional(),
+  zone: z.string().min(1),
   items: z
     .array(
       z.object({
@@ -19,7 +20,7 @@ const createOrderSchema = z.object({
     .min(1),
 });
 
-export function createCheckoutRouter(prisma: PrismaClient) {
+export function createOrdersRouter(prisma: PrismaClient) {
   const router = express.Router();
 
   router.post('/create-order', async (req, res, next) => {
@@ -28,7 +29,7 @@ export function createCheckoutRouter(prisma: PrismaClient) {
       return res.status(400).json({ error: parsed.error.flatten() });
     }
 
-    const { items, email, couponId } = parsed.data;
+    const { items, email, couponId, zone } = parsed.data;
     try {
       const ids = items.map((i) => i.productId);
       const products = await prisma.product.findMany({
@@ -51,6 +52,19 @@ export function createCheckoutRouter(prisma: PrismaClient) {
         return sum + item.qty * product.price_cents;
       }, 0);
 
+      const weight = items.reduce((sum, item) => sum + item.qty, 0);
+      const rate = await prisma.shippingRate.findFirst({
+        where: {
+          zone,
+          minWeight: { lte: weight },
+          maxWeight: { gte: weight },
+        },
+      });
+      if (!rate) {
+        return res.status(400).json({ error: 'Invalid shipping zone' });
+      }
+      const shippingCents = rate.priceCents;
+
       let discount = 0;
       if (couponId) {
         const coupon = await prisma.coupon.findUnique({ where: { id: couponId } });
@@ -64,7 +78,8 @@ export function createCheckoutRouter(prisma: PrismaClient) {
         data: {
           status: 'PENDING',
           currency: 'MXN',
-          total_cents: total - discount,
+          total_cents: total - discount + shippingCents,
+          shipping_cents: shippingCents,
           items: {
             create: items.map((item) => {
               const product = productMap.get(item.productId)!;

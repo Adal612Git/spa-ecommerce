@@ -34,10 +34,25 @@ class FakePrisma {
   orderToFind: any = null;
   updatedOrder: any = null;
 
+  shippingRates = [
+    { zone: 'NORTE', minWeight: 1, maxWeight: 10, priceCents: 500 },
+  ];
+
   product = {
     findMany: async ({ where }: any) => {
       const ids: number[] = where.id.in;
       return this.products.filter((p) => ids.includes(p.id));
+    },
+  };
+
+  shippingRate = {
+    findFirst: async ({ where }: any) => {
+      const weight = where.minWeight.lte;
+      return (
+        this.shippingRates.find(
+          (r) => r.zone === where.zone && r.minWeight <= weight && r.maxWeight >= weight,
+        ) || null
+      );
     },
   };
 
@@ -75,13 +90,17 @@ describe('checkout create-order', () => {
   it('creates an order with items and returns total', async () => {
     const res = await request(app)
       .post('/checkout/create-order')
-      .send({ items: [{ productId: 1, qty: 2 }, { productId: 5, qty: 1 }] })
+      .send({
+        items: [{ productId: 1, qty: 2 }, { productId: 5, qty: 1 }],
+        zone: 'NORTE',
+      })
       .expect(200);
 
-    expect(res.body.total_cents).toBe(79900);
+    expect(res.body.total_cents).toBe(80400);
     expect(prisma.createdOrder.status).toBe('PENDING');
     expect(prisma.createdOrder.currency).toBe('MXN');
-    expect(prisma.createdOrder.total_cents).toBe(79900);
+    expect(prisma.createdOrder.total_cents).toBe(80400);
+    expect(prisma.createdOrder.shipping_cents).toBe(500);
     expect(prisma.createdOrder.items.create).toEqual([
       { productId: 1, qty: 2, unit_price_cents: 10000 },
       { productId: 5, qty: 1, unit_price_cents: 59900 },
@@ -91,7 +110,7 @@ describe('checkout create-order', () => {
   it('fails when qty exceeds stock', async () => {
     await request(app)
       .post('/checkout/create-order')
-      .send({ items: [{ productId: 1, qty: 5 }] })
+      .send({ items: [{ productId: 1, qty: 5 }], zone: 'NORTE' })
       .expect(400);
     expect(prisma.createdOrder).toBeNull();
   });
