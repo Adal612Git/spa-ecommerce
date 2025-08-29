@@ -35,7 +35,7 @@ export const useAuthStore = defineStore('auth', {
       if (!res.ok) throw new Error('Login failed');
       const data = await res.json();
       this.token = data.token;
-      localStorage.setItem('token', this.token);
+      if (this.token) localStorage.setItem('token', this.token);
       await this.fetchMe();
     },
     async register(email: string, name: string, password: string) {

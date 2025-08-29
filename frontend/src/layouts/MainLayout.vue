@@ -1,15 +1,15 @@
 <template>
   <q-layout view="hHh lpR fFf">
-    <Navbar />
+    <AppNavbar />
     <q-page-container>
       <router-view />
     </q-page-container>
-    <Footer />
+    <AppFooter />
   </q-layout>
 </template>
 
 <script setup lang="ts">
-import Navbar from 'components/Navbar.vue';
-import Footer from 'components/Footer.vue';
+import AppNavbar from 'components/AppNavbar.vue';
+import AppFooter from 'components/AppFooter.vue';
 </script>
 

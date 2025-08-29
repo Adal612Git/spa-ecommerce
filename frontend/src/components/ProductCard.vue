@@ -1,6 +1,7 @@
 <template>
   <q-card flat bordered class="full-width">
     <q-img
+      v-if="product.image_url"
       :src="product.image_url"
       :alt="product.name"
       loading="lazy"

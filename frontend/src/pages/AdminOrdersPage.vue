@@ -75,11 +75,11 @@ async function fetchOrders(page = 1, limit = 10) {
   }
 }
 
-function onRequest(props: { pagination: { page: number; rowsPerPage: number } }) {
+async function onRequest(props: { pagination: { page: number; rowsPerPage: number } }) {
   const { page, rowsPerPage } = props.pagination;
-  fetchOrders(page, rowsPerPage);
+  await fetchOrders(page, rowsPerPage);
 }
 
-fetchOrders();
+void fetchOrders();
 </script>
 

@@ -8,7 +8,7 @@
           :key="product.id"
           class="col-12 col-sm-6 col-md-4"
         >
-          <ProductCard :product="product" @add="onAdd" />
+          <ProductCard :product="product" @add="async (p) => { await onAdd(p); }" />
         </div>
       </div>
     </div>
@@ -21,6 +21,7 @@ import ProductSearch from 'components/ProductSearch.vue';
 import ProductCard from 'components/ProductCard.vue';
 import { useProductsStore } from 'stores/productsStore';
 import { useCartStore } from 'stores/cart';
+import type { Product } from 'src/types/product';
 
 const productStore = useProductsStore();
 const cartStore = useCartStore();
@@ -29,8 +30,8 @@ const products = computed(() =>
   productStore.getProducts(1).filter((p) => p.stock > 0),
 );
 
-function onAdd(product: any) {
-  cartStore.add(product, 1);
+async function onAdd(product: Product) {
+  await cartStore.add(product, 1);
 }
 
 onMounted(() => {

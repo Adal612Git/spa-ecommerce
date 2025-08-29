@@ -9,7 +9,7 @@
         :key="line.productId"
         class="row items-center q-gutter-x-md"
       >
-        <img :src="line.image_url" alt="" class="cart-image" />
+        <img v-if="line.image_url" :src="line.image_url" alt="" class="cart-image" />
         <div class="col">
           <div class="text-weight-medium">{{ line.name }}</div>
           <div>{{ (line.price_cents / 100).toFixed(2) }} {{ line.currency }}</div>
@@ -20,14 +20,14 @@
           min="1"
           :max="line.stock"
           style="width: 80px"
-          @update:model-value="(val) => cartStore.updateQty(line.productId, Number(val))"
+          @update:model-value="async (val: string | number | null) => { await cartStore.updateQty(line.productId, Number(val)); }"
         />
         <q-btn
           dense
           flat
           icon="delete"
           color="negative"
-          @click="cartStore.remove(line.productId)"
+          @click="async () => { await cartStore.remove(line.productId); }"
         />
       </div>
       <div class="text-right q-mt-lg">
@@ -37,7 +37,7 @@
         <div>
           Total: {{ (total / 100).toFixed(2) }} {{ currency }}
         </div>
-        <q-btn color="primary" label="Pagar" class="q-mt-md" @click="pay" />
+        <q-btn color="primary" label="Pagar" class="q-mt-md" @click="async () => { await pay(); }" />
       </div>
     </div>
   </q-page>
