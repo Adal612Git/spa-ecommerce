@@ -153,6 +153,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// Basic health check endpoint
+app.get('/health', async (_req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ status: 'ok', db: 'connected' });
+  } catch {
+    res.json({ status: 'ok', db: 'disconnected' });
+  }
+});
+
 app.use('/api/health', createHealthRouter());
 app.use('/api/metrics', createMetricsRouter(register));
 app.use('/api/auth', authLimiter, createAuthRouter(prisma));

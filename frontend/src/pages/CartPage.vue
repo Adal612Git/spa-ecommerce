@@ -6,7 +6,7 @@
     <div v-else class="column q-gutter-y-md">
       <div
         v-for="line in cart"
-        :key="line.lineId"
+        :key="line.productId"
         class="row items-center q-gutter-x-md"
       >
         <img :src="line.image_url" alt="" class="cart-image" />
@@ -20,14 +20,14 @@
           min="1"
           :max="line.stock"
           style="width: 80px"
-          @update:model-value="(val) => cartStore.updateQty(line.lineId, Number(val))"
+          @update:model-value="(val) => cartStore.updateQty(line.productId, Number(val))"
         />
         <q-btn
           dense
           flat
           icon="delete"
           color="negative"
-          @click="cartStore.remove(line.lineId)"
+          @click="cartStore.remove(line.productId)"
         />
       </div>
       <div class="text-right q-mt-lg">

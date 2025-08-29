@@ -6,7 +6,7 @@
     <div v-else class="column q-gutter-y-md">
       <div
         v-for="line in cart"
-        :key="line.lineId"
+        :key="line.productId"
         class="row items-center q-gutter-x-md"
       >
         <img :src="line.image_url" alt="" class="cart-image" />

@@ -16,10 +16,9 @@ import { useMeta } from 'quasar';
 import axios from 'axios';
 
 const route = useRoute();
-interface Product {
-  id: number;
-  name: string;
-  description: string;
+import type { Product as BaseProduct } from 'src/types/product';
+
+interface Product extends BaseProduct {
   images?: { url: string }[];
 }
 
