@@ -1,5 +1,5 @@
 import express from 'express';
-import { Prisma, type PrismaClient, ProductStatus } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 export function createProductsRouter(prisma: PrismaClient) {
   const router = express.Router();
@@ -13,7 +13,7 @@ export function createProductsRouter(prisma: PrismaClient) {
     try {
       const where: Prisma.ProductWhereInput = {
         deleted: false,
-        status: ProductStatus.ACTIVE,
+        status: Prisma.ProductStatus.ACTIVE,
       };
       if (search) {
         where.OR = [
@@ -48,7 +48,7 @@ export function createProductsRouter(prisma: PrismaClient) {
     const { slug } = req.params;
     try {
       const product = await prisma.product.findFirst({
-        where: { slug, deleted: false, status: ProductStatus.ACTIVE },
+        where: { slug, deleted: false, status: Prisma.ProductStatus.ACTIVE },
         include: { images: true },
       });
       if (!product) {
@@ -64,7 +64,7 @@ export function createProductsRouter(prisma: PrismaClient) {
     const { slug } = req.params;
     try {
       const product = await prisma.product.findFirst({
-        where: { slug, deleted: false, status: ProductStatus.ACTIVE },
+        where: { slug, deleted: false, status: Prisma.ProductStatus.ACTIVE },
         include: { images: { select: { url: true }, take: 1 } },
       });
       if (!product) {
