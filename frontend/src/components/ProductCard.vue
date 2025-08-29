@@ -24,7 +24,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { Product } from 'src/stores/productsStore';
+import type { Product } from 'src/types/product';
 
 const props = defineProps<{ product: Product }>();
 const emit = defineEmits<{ (e: 'add', product: Product): void }>();
