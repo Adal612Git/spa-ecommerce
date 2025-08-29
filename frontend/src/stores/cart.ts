@@ -2,23 +2,15 @@ import { defineStore } from 'pinia';
 import { ref, computed, watch } from 'vue';
 import axios from 'axios';
 import { useAuthStore } from './auth';
-
-interface CartLine {
-  productId: number;
-  name: string;
-  price_cents: number;
-  currency: string;
-  qty: number;
-  stock: number;
-  image_url?: string;
-}
+import type { CartItem } from 'src/types/cart';
+import type { Product } from 'src/types/product';
 
 const STORAGE_KEY = 'cart';
 const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '' });
 
 export const useCartStore = defineStore('cart', () => {
   const auth = useAuthStore();
-  const cart = ref<CartLine[]>([]);
+  const cart = ref<CartItem[]>([]);
 
   const subtotal = computed(() =>
     cart.value.reduce((sum, line) => sum + line.price_cents * line.qty, 0),
@@ -41,7 +33,7 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   async function mergeLocalToRemote() {
-    const local: CartLine[] = JSON.parse(
+    const local: CartItem[] = JSON.parse(
       localStorage.getItem(STORAGE_KEY) ?? '[]',
     );
     if (local.length) {
@@ -57,7 +49,7 @@ export const useCartStore = defineStore('cart', () => {
     await fetchRemote();
   }
 
-  async function add(product: any, qty = 1) {
+    async function add(product: Product, qty = 1) {
     if (auth.isAuthenticated) {
       await api.post(
         '/api/cart/add',
@@ -72,15 +64,15 @@ export const useCartStore = defineStore('cart', () => {
       if (target > stock) return;
       if (existing) existing.qty += qty;
       else
-        cart.value.push({
-          productId: product.id,
-          name: product.name,
-          price_cents: product.price_cents,
-          currency: product.currency,
-          qty,
-          stock: product.stock,
-          image_url: product.image_url,
-        });
+          cart.value.push({
+            productId: product.id,
+            name: product.name,
+            price_cents: product.price_cents,
+            currency: product.currency,
+            qty,
+            stock: product.stock,
+            image_url: product.image_url || '',
+          });
       persistLocal();
     }
   }

@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
+import type { Order } from 'src/types/order';
 
 export const useOrdersStore = defineStore('adminOrders', {
-  state: () => ({ orders: [] as any[] }),
+  state: () => ({ orders: [] as Order[] }),
   actions: {
     async fetch(status?: string) {
       const { data } = await axios.get('/api/admin/orders', { params: { status } });

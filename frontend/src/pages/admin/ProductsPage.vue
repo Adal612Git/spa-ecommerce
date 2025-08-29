@@ -4,7 +4,7 @@
     <q-table :rows="productsStore.products" :columns="columns">
       <template #body-cell-actions="props">
         <q-btn flat icon="edit" @click="openDialog(props.row)" />
-        <q-btn flat icon="delete" color="negative" @click="remove(props.row.id)" />
+        <q-btn flat icon="delete" color="negative" @click="async () => { await remove(props.row.id); }" />
       </template>
     </q-table>
 
@@ -12,7 +12,7 @@
       <q-card style="min-width:400px">
         <q-card-section>
           <q-input v-model="form.name" label="Nombre" />
-          <q-input v-model.number="form.priceCents" label="Precio (cents)" />
+          <q-input v-model.number="form.price_cents" label="Precio (cents)" />
           <q-input v-model.number="form.stock" label="Stock" />
           <q-input v-model="form.category" label="Categoría" />
           <q-select v-model="form.status" :options="statusOptions" label="Estado" />
@@ -30,24 +30,30 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useProductsStore } from 'src/stores/products';
+import type { Product } from 'src/types/product';
 
 const productsStore = useProductsStore();
-productsStore.fetch();
+void productsStore.fetch();
+
+interface AdminProduct extends Product {
+  category?: string;
+  status?: string;
+}
 
 const columns = [
   { name: 'name', label: 'Nombre', field: 'name' },
-  { name: 'price', label: 'Precio', field: 'priceCents', format: (v:number)=>`$${(v/100).toFixed(2)}` },
+  { name: 'price', label: 'Precio', field: 'price_cents', format: (v: number) => `$${(v / 100).toFixed(2)}` },
   { name: 'stock', label: 'Stock', field: 'stock' },
   { name: 'status', label: 'Estado', field: 'status' },
-  { name: 'actions', label: 'Acciones' }
+  { name: 'actions', label: 'Acciones', field: (row: Product) => row.id }
 ];
 
 const dialog = ref(false);
-const form = ref<any>({});
+const form = ref<Partial<AdminProduct>>({});
 const files = ref<File[]>([]);
 const statusOptions = ['DRAFT','ACTIVE','INACTIVE'];
 
-function openDialog(product?: any) {
+function openDialog(product?: AdminProduct) {
   form.value = product ? { ...product } : {};
   files.value = [];
   dialog.value = true;

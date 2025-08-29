@@ -29,9 +29,9 @@ const buttonLabel = computed(() => (props.mode === 'login' ? 'Login' : 'Register
 
 async function onSubmit() {
   if (props.mode === 'login') {
-    auth.login(email.value, password.value);
+    await auth.login(email.value, password.value);
   } else {
-    auth.register(email.value, name.value, password.value);
+    await auth.register(email.value, name.value, password.value);
   }
   await router.push('/');
 }

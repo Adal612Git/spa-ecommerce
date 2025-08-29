@@ -9,7 +9,7 @@
         :key="line.productId"
         class="row items-center q-gutter-x-md"
       >
-        <img :src="line.image_url" alt="" class="cart-image" />
+        <img v-if="line.image_url" :src="line.image_url" alt="" class="cart-image" />
         <div class="col">
           <div class="text-weight-medium">{{ line.name }}</div>
           <div>{{ (line.price_cents / 100).toFixed(2) }} {{ line.currency }}</div>
@@ -18,13 +18,13 @@
       </div>
 
       <q-input v-model="couponCode" label="Cupón" dense />
-      <q-btn label="Aplicar" @click="applyCoupon" />
+      <q-btn label="Aplicar" @click="async () => { await applyCoupon(); }" />
 
       <q-select
         v-model="selectedZone"
         :options="zones"
         label="Zona de envío"
-        @update:model-value="zoneChanged"
+        @update:model-value="async (val) => { await zoneChanged(val); }"
       />
 
       <div class="text-right q-mt-lg">
@@ -36,7 +36,7 @@
         <div>
           Total: {{ (total / 100).toFixed(2) }} {{ currency }}
         </div>
-        <CheckoutButton class="q-mt-md" @click="pay" />
+        <CheckoutButton class="q-mt-md" @click="async () => { await pay(); }" />
       </div>
     </div>
   </q-page>

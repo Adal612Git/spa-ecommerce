@@ -1,16 +1,19 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
+import type { Product } from 'src/types/product';
 
 export const useProductsStore = defineStore('adminProducts', {
-  state: () => ({ products: [] as any[] }),
+  state: () => ({ products: [] as Product[] }),
   actions: {
     async fetch() {
       const { data } = await axios.get('/api/admin/products');
       this.products = data;
     },
-    async save(product: any, images: File[]) {
+    async save(product: Partial<Product>, images: File[]) {
       const form = new FormData();
-      Object.entries(product).forEach(([k, v]) => form.append(k, v as any));
+      Object.entries(product).forEach(([k, v]) => {
+        if (v != null) form.append(k, String(v));
+      });
       images.forEach((img) => form.append('images', img));
       if (product.id) {
         await axios.put(`/api/admin/products/${product.id}`, form);

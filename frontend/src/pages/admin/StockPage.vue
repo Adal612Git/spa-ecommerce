@@ -5,7 +5,7 @@
         <q-input v-model.number="props.row.stock" type="number" dense style="width:80px" />
       </template>
       <template #body-cell-actions="props">
-        <q-btn label="Actualizar" color="primary" size="sm" @click="update(props.row)" />
+        <q-btn label="Actualizar" color="primary" size="sm" @click="async () => { await update(props.row); }" />
       </template>
     </q-table>
   </q-page>
@@ -13,17 +13,18 @@
 
 <script setup lang="ts">
 import { useProductsStore } from 'src/stores/products';
+import type { Product } from 'src/types/product';
 
 const productsStore = useProductsStore();
-productsStore.fetch();
+void productsStore.fetch();
 
 const columns = [
   { name: 'name', label: 'Producto', field: 'name' },
   { name: 'stock', label: 'Stock', field: 'stock' },
-  { name: 'actions', label: 'Acciones' }
+  { name: 'actions', label: 'Acciones', field: (row: Product) => row.id }
 ];
 
-async function update(row: any) {
+async function update(row: Product) {
   await productsStore.updateStock(row.id, row.stock);
 }
 </script>

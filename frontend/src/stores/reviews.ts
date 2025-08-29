@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
+import type { Review } from 'src/types/review';
 
 export const useReviewsStore = defineStore('adminReviews', {
-  state: () => ({ reviews: [] as any[] }),
+  state: () => ({ reviews: [] as Review[] }),
   actions: {
     async fetch(status?: string) {
       const { data } = await axios.get('/api/admin/reviews', { params: { status } });
