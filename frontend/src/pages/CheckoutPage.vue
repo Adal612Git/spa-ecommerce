@@ -12,7 +12,10 @@
         <img v-if="line.image_url" :src="line.image_url" alt="" class="cart-image" />
         <div class="col">
           <div class="text-weight-medium">{{ line.name }}</div>
-          <div>{{ (line.price_cents / 100).toFixed(2) }} {{ line.currency }}</div>
+          <div>
+            {{ ((line.price_cents ?? 0) / 100).toFixed(2) }}
+            {{ line.currency ?? 'MXN' }}
+          </div>
         </div>
         <div>x{{ line.qty }}</div>
       </div>
@@ -28,13 +31,17 @@
       />
 
       <div class="text-right q-mt-lg">
-        <div>Subtotal: {{ (subtotal / 100).toFixed(2) }} {{ currency }}</div>
-        <div v-if="couponStore.coupon">
-          Descuento: -{{ (discount / 100).toFixed(2) }} {{ currency }}
-        </div>
-        <div>Envío: {{ (shippingCost / 100).toFixed(2) }} {{ currency }}</div>
         <div>
-          Total: {{ (total / 100).toFixed(2) }} {{ currency }}
+          Subtotal: {{ ((subtotal ?? 0) / 100).toFixed(2) }} {{ currency }}
+        </div>
+        <div v-if="couponStore.coupon">
+          Descuento: -{{ ((discount ?? 0) / 100).toFixed(2) }} {{ currency }}
+        </div>
+        <div>
+          Envío: {{ ((shippingCost ?? 0) / 100).toFixed(2) }} {{ currency }}
+        </div>
+        <div>
+          Total: {{ ((total ?? 0) / 100).toFixed(2) }} {{ currency }}
         </div>
         <CheckoutButton class="q-mt-md" @click="async () => { await pay(); }" />
       </div>
@@ -55,12 +62,12 @@ const couponStore = useCouponStore();
 const shippingStore = useShippingStore();
 const cart = computed(() => cartStore.cart);
 const subtotal = computed(() => cartStore.subtotal);
-const discount = computed(() => couponStore.coupon?.discount || 0);
-const shippingCost = computed(() => shippingStore.cost);
+const discount = computed(() => couponStore.coupon?.discount ?? 0);
+const shippingCost = computed(() => shippingStore.cost ?? 0);
 const total = computed(
   () => subtotal.value - discount.value + shippingCost.value,
 );
-const currency = computed(() => cart.value[0]?.currency || 'MXN');
+const currency = computed(() => cart.value[0]?.currency ?? 'MXN');
 
 const couponCode = ref('');
 const selectedZone = ref('');
