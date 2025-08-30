@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { api } from 'src/api/api';
 import type { Product } from 'src/types/product';
 
 interface Filters {
@@ -53,20 +54,14 @@ export const useProductStore = defineStore('products', {
         this.error = null;
       }
       try {
-        const params = new URLSearchParams({
-          page: page.toString(),
-          limit: limit.toString(),
-        });
-        if (this.filters.search) params.append('search', this.filters.search);
-        if (this.filters.category) params.append('category', this.filters.category);
+        const params: Record<string, string | number> = {
+          page,
+          limit,
+        };
+        if (this.filters.search) params.search = this.filters.search;
+        if (this.filters.category) params.category = this.filters.category;
 
-        // 👇 usar la variable de entorno
-        const baseUrl = import.meta.env.VITE_API_URL;
-        const res = await fetch(`${baseUrl}/api/products?${params.toString()}`);
-
-
-        if (!res.ok) throw new Error('Failed to fetch products');
-        const json = await res.json();
+        const { data: json } = await api.get('/api/products', { params });
         this.pages[page] = json.data as Product[];
         this.total = json.meta.total;
       } catch (err: unknown) {
@@ -89,5 +84,3 @@ export const useProductStore = defineStore('products', {
     },
   },
 });
-
-export const useProductsStore = useProductStore;

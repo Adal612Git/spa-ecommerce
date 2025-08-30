@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { useProductsStore } from 'src/stores/productsStore';
+import { useProductStore } from 'stores/product';
 
 interface CategoryOption {
   label: string;
@@ -42,7 +42,7 @@ interface Props {
 
 defineProps<Props>();
 
-const store = useProductsStore();
+const store = useProductStore();
 
 const search = ref(store.filters.search);
 const category = ref(store.filters.category);
