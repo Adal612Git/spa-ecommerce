@@ -12,12 +12,9 @@ export const useCartStore = defineStore('cart', () => {
   const auth = useAuthStore();
   const cart = ref<CartItem[]>([]);
 
-  // Subtotal y total siempre calculados con price_cents
+  // Subtotal y total siempre calculados con priceCents
   const subtotal = computed(() =>
-    cart.value.reduce(
-      (sum, line) => sum + (line.price_cents ?? 0) * line.qty,
-      0,
-    ),
+    cart.value.reduce((sum, line) => sum + line.priceCents * line.qty, 0),
   );
   const total = computed(() => subtotal.value);
 
@@ -26,39 +23,25 @@ export const useCartStore = defineStore('cart', () => {
     const raw = JSON.parse(
       localStorage.getItem(STORAGE_KEY) ?? '[]',
     ) as Array<Partial<CartItem>>;
-    cart.value = raw.map((item) => {
-      const obj = { ...item } as Partial<CartItem>;
-      const price = obj.price_cents ?? obj.priceCents ?? 0;
-      delete obj.priceCents;
-      delete obj.price_cents;
-      return {
-        ...obj,
-        price_cents: price,
-      } as CartItem;
-    });
+    cart.value = raw.map(
+      (item) => ({ ...item, priceCents: item.priceCents ?? 0 } as CartItem),
+    );
   }
 
   function persistLocal() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cart.value));
   }
 
-  // Cargar carrito remoto y normalizar a price_cents
+  // Cargar carrito remoto
   async function fetchRemote() {
     const { data } = await api.get('/api/cart', {
       headers: { Authorization: `Bearer ${auth.token}` },
     });
 
     const items = (data.items ?? []) as Array<Partial<CartItem>>;
-    cart.value = items.map((item) => {
-      const obj = { ...item } as Partial<CartItem>;
-      const price = obj.price_cents ?? obj.priceCents ?? 0;
-      delete obj.priceCents;
-      delete obj.price_cents;
-      return {
-        ...obj,
-        price_cents: price,
-      } as CartItem;
-    });
+    cart.value = items.map(
+      (item) => ({ ...item, priceCents: item.priceCents ?? 0 } as CartItem),
+    );
   }
 
   // Fusionar carrito local al remoto
@@ -100,8 +83,7 @@ export const useCartStore = defineStore('cart', () => {
         cart.value.push({
           productId: product.id,
           name: product.name,
-          // 👇 siempre convertimos a snake_case para el carrito
-          price_cents: product.price_cents ?? product.priceCents ?? 0,
+          priceCents: product.priceCents,
           currency: product.currency ?? 'USD',
           qty,
           stock: product.stock,

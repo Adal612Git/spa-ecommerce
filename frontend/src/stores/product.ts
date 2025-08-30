@@ -69,16 +69,10 @@ export const useProductStore = defineStore('products', {
         const { data: json } = await api.get('/api/products', { params });
         console.log('FETCHED PRODUCTS RAW:', json);
 
-        // 👇 Normalizamos para aceptar tanto priceCents (backend) como price_cents
         const data = json.data as Array<Partial<Product>>;
-        this.pages[page] = data.map((p) => {
-          const price = p.price_cents ?? p.priceCents ?? 0;
-          return {
-            ...p,
-            price_cents: price,
-            priceCents: price,
-          } as Product;
-        });
+        this.pages[page] = data.map(
+          (p) => ({ ...p, priceCents: p.priceCents ?? 0 } as Product),
+        );
 
         this.total = json.data.length;
 

@@ -13,7 +13,7 @@
         <div class="col">
           <div class="text-weight-medium">{{ line.name }}</div>
           <div>
-            {{ ((line.price_cents ?? 0) / 100).toFixed(2) }}
+            {{ ((line.priceCents * line.qty) / 100).toFixed(2) }}
             {{ line.currency ?? 'USD' }}
           </div>
         </div>
@@ -35,11 +35,11 @@
       </div>
       <div class="text-right q-mt-lg">
         <div>
-          Subtotal: {{ ((subtotal ?? 0) / 100).toFixed(2) }}
+          Subtotal: {{ (subtotal / 100).toFixed(2) }}
           {{ currency }}
         </div>
         <div>
-          Total: {{ ((total ?? 0) / 100).toFixed(2) }}
+          Total: {{ (total / 100).toFixed(2) }}
           {{ currency }}
         </div>
         <q-btn color="primary" label="Pagar" class="q-mt-md" @click="async () => { await pay(); }" />

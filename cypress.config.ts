@@ -22,7 +22,7 @@ export default defineConfig({
         async createProduct(data: {
           name: string;
           slug: string;
-          price_cents: number;
+          priceCents: number;
           stock?: number;
         }) {
           return prisma.product.create({ data });
