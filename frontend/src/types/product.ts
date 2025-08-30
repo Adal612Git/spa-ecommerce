@@ -3,7 +3,8 @@ export interface Product {
   name: string;
   slug: string;
   description?: string;
-  price_cents: number;
+  price_cents?: number;
+  priceCents?: number;
   currency: string;
   stock: number;
   image_url?: string;

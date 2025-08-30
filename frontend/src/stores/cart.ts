@@ -20,7 +20,15 @@ export const useCartStore = defineStore('cart', () => {
 
   // LocalStorage
   function loadLocal() {
-    cart.value = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
+    cart.value = raw.map((item: any) => {
+      const price = item.price_cents ?? item.priceCents ?? 0;
+      const { priceCents, price_cents, ...rest } = item;
+      return {
+        ...rest,
+        price_cents: price,
+      } as CartItem;
+    });
   }
 
   function persistLocal() {
@@ -33,10 +41,14 @@ export const useCartStore = defineStore('cart', () => {
       headers: { Authorization: `Bearer ${auth.token}` },
     });
 
-    cart.value = (data.items ?? []).map((item: any) => ({
-      ...item,
-      price_cents: item.price_cents ?? item.priceCents ?? 0,
-    }));
+    cart.value = (data.items ?? []).map((item: any) => {
+      const price = item.price_cents ?? item.priceCents ?? 0;
+      const { priceCents, price_cents, ...rest } = item;
+      return {
+        ...rest,
+        price_cents: price,
+      } as CartItem;
+    });
   }
 
   // Fusionar carrito local al remoto
