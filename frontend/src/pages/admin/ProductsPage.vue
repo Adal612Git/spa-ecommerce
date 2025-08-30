@@ -12,7 +12,7 @@
       <q-card style="min-width:400px">
         <q-card-section>
           <q-input v-model="form.name" label="Nombre" />
-          <q-input v-model.number="form.price_cents" label="Precio (cents)" />
+          <q-input v-model.number="form.priceCents" label="Precio (cents)" />
           <q-input v-model.number="form.stock" label="Stock" />
           <q-input v-model="form.category" label="Categoría" />
           <q-select v-model="form.status" :options="statusOptions" label="Estado" />
@@ -42,7 +42,7 @@ interface AdminProduct extends Product {
 
 const columns = [
   { name: 'name', label: 'Nombre', field: 'name' },
-  { name: 'price', label: 'Precio', field: 'price_cents', format: (v: number) => `$${(v / 100).toFixed(2)}` },
+  { name: 'price', label: 'Precio', field: 'priceCents', format: (v: number) => `$${(v / 100).toFixed(2)}` },
   { name: 'stock', label: 'Stock', field: 'stock' },
   { name: 'status', label: 'Estado', field: 'status' },
   { name: 'actions', label: 'Acciones', field: (row: Product) => row.id }

@@ -13,7 +13,7 @@
         <div class="col">
           <div class="text-weight-medium">{{ line.name }}</div>
           <div>
-            {{ ((line.price_cents ?? 0) / 100).toFixed(2) }}
+            {{ ((line.priceCents * line.qty) / 100).toFixed(2) }}
             {{ line.currency ?? 'MXN' }}
           </div>
         </div>
@@ -32,16 +32,16 @@
 
       <div class="text-right q-mt-lg">
         <div>
-          Subtotal: {{ ((subtotal ?? 0) / 100).toFixed(2) }} {{ currency }}
+          Subtotal: {{ (subtotal / 100).toFixed(2) }} {{ currency }}
         </div>
         <div v-if="couponStore.coupon">
-          Descuento: -{{ ((discount ?? 0) / 100).toFixed(2) }} {{ currency }}
+          Descuento: -{{ (discount / 100).toFixed(2) }} {{ currency }}
         </div>
         <div>
-          Envío: {{ ((shippingCost ?? 0) / 100).toFixed(2) }} {{ currency }}
+          Envío: {{ (shippingCost / 100).toFixed(2) }} {{ currency }}
         </div>
         <div>
-          Total: {{ ((total ?? 0) / 100).toFixed(2) }} {{ currency }}
+          Total: {{ (total / 100).toFixed(2) }} {{ currency }}
         </div>
         <CheckoutButton class="q-mt-md" @click="async () => { await pay(); }" />
       </div>

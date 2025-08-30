@@ -9,7 +9,7 @@ describe('checkout flow', () => {
     cy.task('createProduct', {
       name: 'Test Product',
       slug: `test-product-${Date.now()}`,
-      price_cents: 500,
+      priceCents: 500,
       stock: 10,
     }).then((product) => {
       const productId = product.id;

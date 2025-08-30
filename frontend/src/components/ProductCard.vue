@@ -32,14 +32,12 @@ type ProductImage = { url: string };
 /**
  * Acepta ambos formatos de backend:
  * - camelCase: priceCents, imageUrl, images[]
- * - snake_case: price_cents, image_url
+ * - snake_case: image_url
  */
 type ProductView = BaseProduct & {
   images?: ProductImage[];
   image_url?: string;
   imageUrl?: string;
-  price_cents?: number;
-  priceCents?: number;       // 👈 añadido para que TS no marque error
   currency?: string | null;
 };
 
@@ -54,10 +52,7 @@ const mainImage = computed(() =>
 );
 
 const formattedPrice = computed(() => {
-  const cents =
-    props.product.priceCents ??
-    props.product.price_cents ??
-    0;
+  const cents = props.product.priceCents ?? 0;
   const price = cents / 100;
   const currency = props.product.currency ?? 'MXN';
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency }).format(price);
