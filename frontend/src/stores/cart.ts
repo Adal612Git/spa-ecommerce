@@ -14,18 +14,25 @@ export const useCartStore = defineStore('cart', () => {
 
   // Subtotal y total siempre calculados con price_cents
   const subtotal = computed(() =>
-    cart.value.reduce((sum, line) => sum + line.price_cents * line.qty, 0),
+    cart.value.reduce(
+      (sum, line) => sum + (line.price_cents ?? 0) * line.qty,
+      0,
+    ),
   );
-  const total = subtotal;
+  const total = computed(() => subtotal.value);
 
   // LocalStorage
   function loadLocal() {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
-    cart.value = raw.map((item: any) => {
-      const price = item.price_cents ?? item.priceCents ?? 0;
-      const { priceCents, price_cents, ...rest } = item;
+    const raw = JSON.parse(
+      localStorage.getItem(STORAGE_KEY) ?? '[]',
+    ) as Array<Partial<CartItem>>;
+    cart.value = raw.map((item) => {
+      const obj = { ...item } as Partial<CartItem>;
+      const price = obj.price_cents ?? obj.priceCents ?? 0;
+      delete obj.priceCents;
+      delete obj.price_cents;
       return {
-        ...rest,
+        ...obj,
         price_cents: price,
       } as CartItem;
     });
@@ -41,11 +48,14 @@ export const useCartStore = defineStore('cart', () => {
       headers: { Authorization: `Bearer ${auth.token}` },
     });
 
-    cart.value = (data.items ?? []).map((item: any) => {
-      const price = item.price_cents ?? item.priceCents ?? 0;
-      const { priceCents, price_cents, ...rest } = item;
+    const items = (data.items ?? []) as Array<Partial<CartItem>>;
+    cart.value = items.map((item) => {
+      const obj = { ...item } as Partial<CartItem>;
+      const price = obj.price_cents ?? obj.priceCents ?? 0;
+      delete obj.priceCents;
+      delete obj.price_cents;
       return {
-        ...rest,
+        ...obj,
         price_cents: price,
       } as CartItem;
     });

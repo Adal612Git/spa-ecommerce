@@ -12,7 +12,10 @@
         <img v-if="line.image_url" :src="line.image_url" alt="" class="cart-image" />
         <div class="col">
           <div class="text-weight-medium">{{ line.name }}</div>
-          <div>{{ (line.price_cents / 100).toFixed(2) }} {{ line.currency }}</div>
+          <div>
+            {{ ((line.price_cents ?? 0) / 100).toFixed(2) }}
+            {{ line.currency ?? 'USD' }}
+          </div>
         </div>
         <q-input
           type="number"
@@ -32,10 +35,12 @@
       </div>
       <div class="text-right q-mt-lg">
         <div>
-          Subtotal: {{ (subtotal / 100).toFixed(2) }} {{ currency }}
+          Subtotal: {{ ((subtotal ?? 0) / 100).toFixed(2) }}
+          {{ currency }}
         </div>
         <div>
-          Total: {{ (total / 100).toFixed(2) }} {{ currency }}
+          Total: {{ ((total ?? 0) / 100).toFixed(2) }}
+          {{ currency }}
         </div>
         <q-btn color="primary" label="Pagar" class="q-mt-md" @click="async () => { await pay(); }" />
       </div>
@@ -52,7 +57,7 @@ const cartStore = useCartStore();
 const cart = computed(() => cartStore.cart);
 const subtotal = computed(() => cartStore.subtotal);
 const total = computed(() => cartStore.total);
-const currency = computed(() => cart.value[0]?.currency || 'USD');
+const currency = computed(() => cart.value[0]?.currency ?? 'USD');
 const $q = useQuasar();
 const apiBase =
   import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
