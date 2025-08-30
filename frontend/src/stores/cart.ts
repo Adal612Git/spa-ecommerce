@@ -12,11 +12,13 @@ export const useCartStore = defineStore('cart', () => {
   const auth = useAuthStore();
   const cart = ref<CartItem[]>([]);
 
+  // Subtotal y total siempre calculados con price_cents
   const subtotal = computed(() =>
     cart.value.reduce((sum, line) => sum + line.price_cents * line.qty, 0),
   );
   const total = subtotal;
 
+  // LocalStorage
   function loadLocal() {
     cart.value = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
   }
@@ -25,13 +27,19 @@ export const useCartStore = defineStore('cart', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cart.value));
   }
 
+  // Cargar carrito remoto y normalizar a price_cents
   async function fetchRemote() {
     const { data } = await api.get('/api/cart', {
       headers: { Authorization: `Bearer ${auth.token}` },
     });
-    cart.value = data.items ?? [];
+
+    cart.value = (data.items ?? []).map((item: any) => ({
+      ...item,
+      price_cents: item.price_cents ?? item.priceCents ?? 0,
+    }));
   }
 
+  // Fusionar carrito local al remoto
   async function mergeLocalToRemote() {
     const local: CartItem[] = JSON.parse(
       localStorage.getItem(STORAGE_KEY) ?? '[]',
@@ -49,7 +57,8 @@ export const useCartStore = defineStore('cart', () => {
     await fetchRemote();
   }
 
-    async function add(product: Product, qty = 1) {
+  // Agregar producto al carrito
+  async function add(product: Product, qty = 1) {
     if (auth.isAuthenticated) {
       await api.post(
         '/api/cart/add',
@@ -62,21 +71,26 @@ export const useCartStore = defineStore('cart', () => {
       const target = existing ? existing.qty + qty : qty;
       const stock = existing ? existing.stock : product.stock;
       if (target > stock) return;
-      if (existing) existing.qty += qty;
-      else
-          cart.value.push({
-            productId: product.id,
-            name: product.name,
-            price_cents: product.price_cents,
-            currency: product.currency,
-            qty,
-            stock: product.stock,
-            image_url: product.image_url || '',
-          });
+
+      if (existing) {
+        existing.qty += qty;
+      } else {
+        cart.value.push({
+          productId: product.id,
+          name: product.name,
+          // 👇 siempre convertimos a snake_case para el carrito
+          price_cents: product.price_cents ?? product.priceCents ?? 0,
+          currency: product.currency ?? 'USD',
+          qty,
+          stock: product.stock,
+          image_url: product.image_url || '',
+        });
+      }
       persistLocal();
     }
   }
 
+  // Actualizar cantidad
   async function updateQty(productId: number, qty: number) {
     if (auth.isAuthenticated) {
       await api.post(
@@ -93,6 +107,7 @@ export const useCartStore = defineStore('cart', () => {
     }
   }
 
+  // Remover producto
   async function remove(productId: number) {
     if (auth.isAuthenticated) {
       await api.post(
@@ -107,6 +122,7 @@ export const useCartStore = defineStore('cart', () => {
     }
   }
 
+  // Sincronización cuando cambia el estado de autenticación
   watch(
     () => auth.isAuthenticated,
     async (logged) => {
@@ -121,4 +137,3 @@ export const useCartStore = defineStore('cart', () => {
 
   return { cart, subtotal, total, add, updateQty, remove };
 });
-

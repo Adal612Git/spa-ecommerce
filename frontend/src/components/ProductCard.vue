@@ -1,8 +1,8 @@
 <template>
   <q-card flat bordered class="full-width">
     <q-img
-      v-if="product.image_url"
-      :src="product.image_url"
+      v-if="mainImage"
+      :src="mainImage"
       :alt="product.name"
       loading="lazy"
       ratio="1"
@@ -25,17 +25,42 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { Product } from 'src/types/product';
+import type { Product as BaseProduct } from 'src/types/product';
 
-const props = defineProps<{ product: Product }>();
-const emit = defineEmits<{ (e: 'add', product: Product): void }>();
+type ProductImage = { url: string };
+
+/**
+ * Acepta ambos formatos de backend:
+ * - camelCase: priceCents, imageUrl, images[]
+ * - snake_case: price_cents, image_url
+ */
+type ProductView = BaseProduct & {
+  images?: ProductImage[];
+  image_url?: string;
+  imageUrl?: string;
+  price_cents?: number;
+  priceCents?: number;       // 👈 añadido para que TS no marque error
+  currency?: string | null;
+};
+
+const props = defineProps<{ product: ProductView }>();
+const emit = defineEmits<{ (e: 'add', product: ProductView): void }>();
+
+const mainImage = computed(() =>
+  props.product.images?.[0]?.url ??
+  props.product.imageUrl ??
+  props.product.image_url ??
+  ''
+);
 
 const formattedPrice = computed(() => {
-  const price = props.product.price_cents / 100;
-  return new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: props.product.currency,
-  }).format(price);
+  const cents =
+    props.product.priceCents ??
+    props.product.price_cents ??
+    0;
+  const price = cents / 100;
+  const currency = props.product.currency ?? 'MXN';
+  return new Intl.NumberFormat('es-MX', { style: 'currency', currency }).format(price);
 });
 
 function onAdd() {
@@ -44,7 +69,5 @@ function onAdd() {
 </script>
 
 <style scoped>
-.full-width {
-  width: 100%;
-}
+.full-width { width: 100%; }
 </style>

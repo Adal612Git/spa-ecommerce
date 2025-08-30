@@ -27,8 +27,13 @@ export const useProductStore = defineStore('products', {
     },
   }),
   getters: {
-    getProducts: (state) => (page: number) => state.pages[page] ?? [],
-    totalPages: (state) => (limit: number) => Math.ceil(state.total / limit),
+    getProducts: (state) => (page: number) => {
+      const prods = state.pages[page] ?? [];
+      console.log('GETTER PRODUCTS PAGE', page, prods);
+      return prods;
+    },
+    totalPages: (state) => (limit: number) =>
+      limit > 0 ? Math.ceil(state.total / limit) : 0,
   },
   actions: {
     search(query: string) {
@@ -62,11 +67,22 @@ export const useProductStore = defineStore('products', {
         if (this.filters.category) params.category = this.filters.category;
 
         const { data: json } = await api.get('/api/products', { params });
-        this.pages[page] = json.data as Product[];
-        this.total = json.meta.total;
+        console.log('FETCHED PRODUCTS RAW:', json);
+
+        // 👇 Normalizamos para aceptar tanto priceCents (backend) como price_cents
+        this.pages[page] = (json.data as Product[]).map((p: any) => ({
+          ...p,
+          priceCents: p.priceCents ?? p.price_cents ?? 0,
+        }));
+
+        this.total = json.data.length;
+
+        console.log('STORE UPDATED: page', page, this.pages[page]);
+        console.log('TOTAL PRODUCTS:', this.total);
       } catch (err: unknown) {
         if (!prefetch) {
           this.error = err instanceof Error ? err.message : 'Unknown error';
+          console.error('FETCH PRODUCTS ERROR:', err);
         }
       } finally {
         if (!prefetch) {
@@ -79,6 +95,7 @@ export const useProductStore = defineStore('products', {
         const prod = products.find((p) => p.id === productId);
         if (prod) {
           prod.stock = stock;
+          console.log(`STOCK UPDATED: product ${productId} -> ${stock}`);
         }
       });
     },
