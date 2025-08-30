@@ -1,4 +1,4 @@
-import { PrismaClient, Role } from '@prisma/client';
+import { PrismaClient, Role, ProductStatus } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -10,7 +10,6 @@ async function main() {
     update: {},
     create: {
       email: 'admin@spa-ecommerce.local',
-      name: 'Admin',
       role: Role.ADMIN,
       passwordHash: adminHash,
     },
@@ -20,12 +19,12 @@ async function main() {
   await prisma.user.upsert({
     where: { email: 'alice@example.com' },
     update: {},
-    create: { email: 'alice@example.com', name: 'Alice', role: Role.CUSTOMER, passwordHash: demoHash },
+    create: { email: 'alice@example.com', role: Role.CUSTOMER, passwordHash: demoHash },
   });
   await prisma.user.upsert({
     where: { email: 'bob@example.com' },
     update: {},
-    create: { email: 'bob@example.com', name: 'Bob', role: Role.CUSTOMER, passwordHash: demoHash },
+    create: { email: 'bob@example.com', role: Role.CUSTOMER, passwordHash: demoHash },
   });
 
   const products = [
@@ -35,7 +34,7 @@ async function main() {
       description: 'Taza cerámica para café o té.',
       priceCents: 1299,
       stock: 50,
-      status: 'ACTIVE',
+      status: ProductStatus.ACTIVE,
     },
     {
       name: 'Playera básica',
@@ -43,7 +42,7 @@ async function main() {
       description: 'Playera de algodón 100%.',
       priceCents: 1999,
       stock: 100,
-      status: 'ACTIVE',
+      status: ProductStatus.ACTIVE,
     },
     {
       name: 'Gorra deportiva',
@@ -51,7 +50,7 @@ async function main() {
       description: 'Gorra ajustable para exterior.',
       priceCents: 1599,
       stock: 40,
-      status: 'ACTIVE',
+      status: ProductStatus.ACTIVE,
     },
     {
       name: 'Sudadera con capucha',
@@ -59,7 +58,7 @@ async function main() {
       description: 'Sudadera cómoda para clima frío.',
       priceCents: 3499,
       stock: 25,
-      status: 'ACTIVE',
+      status: ProductStatus.ACTIVE,
     },
     {
       name: 'Zapatos deportivos',
@@ -67,7 +66,7 @@ async function main() {
       description: 'Calzado ligero para correr.',
       priceCents: 5999,
       stock: 30,
-      status: 'ACTIVE',
+      status: ProductStatus.ACTIVE,
     },
     {
       name: 'Mochila escolar',
@@ -75,7 +74,7 @@ async function main() {
       description: 'Mochila resistente con varios compartimentos.',
       priceCents: 2799,
       stock: 60,
-      status: 'ACTIVE',
+      status: ProductStatus.ACTIVE,
     },
     {
       name: 'Cuaderno de notas',
@@ -83,7 +82,7 @@ async function main() {
       description: 'Cuaderno con 100 hojas rayadas.',
       priceCents: 499,
       stock: 200,
-      status: 'ACTIVE',
+      status: ProductStatus.ACTIVE,
     },
     {
       name: 'Bolígrafo azul',
@@ -91,7 +90,7 @@ async function main() {
       description: 'Bolígrafo de tinta azul de gel.',
       priceCents: 199,
       stock: 500,
-      status: 'ACTIVE',
+      status: ProductStatus.ACTIVE,
     },
     {
       name: 'Audífonos inalámbricos',
@@ -99,7 +98,7 @@ async function main() {
       description: 'Audífonos Bluetooth con cancelación de ruido.',
       priceCents: 8999,
       stock: 15,
-      status: 'ACTIVE',
+      status: ProductStatus.ACTIVE,
     },
     {
       name: 'Smartwatch',
@@ -107,13 +106,16 @@ async function main() {
       description: 'Reloj inteligente con monitor de ritmo cardíaco.',
       priceCents: 12999,
       stock: 10,
-      status: 'INACTIVE',
+      status: ProductStatus.INACTIVE,
     },
   ];
 
-  await prisma.product.createMany({ data: products });
+  await prisma.product.createMany({
+    data: products,
+    skipDuplicates: true, // 👈 evita error de slugs repetidos
+  });
 
-  console.log('Seeded admin, demo users and products');
+  console.log('✅ Seeded admin, demo users and products');
 }
 
 main()

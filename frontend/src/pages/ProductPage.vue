@@ -30,7 +30,8 @@ useMeta(() => ({ title: product.value?.name || 'Producto' }));
 
 onMounted(async () => {
   const slug = route.params.slug as string;
-  const { data } = await axios.get(`/api/products/${slug}`);
+const baseUrl = import.meta.env.VITE_API_URL;
+const { data } = await axios.get(`${baseUrl}/api/products/${slug}`);
   product.value = data;
 });
 </script>

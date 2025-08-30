@@ -8,7 +8,10 @@
           :key="product.id"
           class="col-12 col-sm-6 col-md-4"
         >
-          <ProductCard :product="product" @add="async (p) => { await onAdd(p); }" />
+          <ProductCard
+            :product="product"
+            @add="async (p) => { await onAdd(p); }"
+          />
         </div>
       </div>
     </div>
@@ -19,11 +22,11 @@
 import { computed, onMounted } from 'vue';
 import ProductSearch from 'components/ProductSearch.vue';
 import ProductCard from 'components/ProductCard.vue';
-import { useProductsStore } from 'stores/productsStore';
+import { useProductStore } from 'stores/product'; // 👈 usar el store correcto
 import { useCartStore } from 'stores/cart';
 import type { Product } from 'src/types/product';
 
-const productStore = useProductsStore();
+const productStore = useProductStore(); // 👈 este es el de catálogo
 const cartStore = useCartStore();
 
 const products = computed(() =>
@@ -38,4 +41,3 @@ onMounted(() => {
   void productStore.fetchProducts(1, 12, { force: true });
 });
 </script>
-

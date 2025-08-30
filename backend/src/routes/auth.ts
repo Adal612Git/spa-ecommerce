@@ -11,8 +11,9 @@ import { revokedTokens, setPrismaClient } from '../middleware/auth.js';
 export const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
+  name: z.string().min(1).optional(), // 👈 ahora acepta name opcional
 });
-export const loginSchema = registerSchema;
+export const loginSchema = registerSchema.omit({ name: true });
 
 const JWT_SECRET = process.env.JWT_SECRET ?? '';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
@@ -21,12 +22,13 @@ export function createAuthRouter(prisma: PrismaClient) {
   const router = express.Router();
   setPrismaClient(prisma);
 
+  // POST /api/auth/register
   router.post('/register', async (req, res, next) => {
     const parsed = registerSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ ok: false, error: parsed.error.flatten() });
     }
-    const { email, password } = parsed.data;
+    const { email, password, name } = parsed.data;
     try {
       const existing = await prisma.user.findUnique({ where: { email } });
       if (existing) {
@@ -34,7 +36,7 @@ export function createAuthRouter(prisma: PrismaClient) {
       }
       const passwordHash = await hashPassword(password);
       const user = await prisma.user.create({
-        data: { email, passwordHash },
+        data: { email, passwordHash, name }, // 👈 guardamos name si viene
         select: { id: true, email: true, name: true, role: true, createdAt: true },
       });
       res.status(201).json(user);
@@ -43,6 +45,7 @@ export function createAuthRouter(prisma: PrismaClient) {
     }
   });
 
+  // POST /api/auth/login
   router.post('/login', (req, res, next) => {
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -61,6 +64,7 @@ export function createAuthRouter(prisma: PrismaClient) {
     })(req, res, next);
   });
 
+  // POST /api/auth/logout
   router.post('/logout', passport.authenticate('jwt', { session: false }), (req, res) => {
     const token = req.get('authorization')?.replace('Bearer ', '');
     if (token) {
@@ -69,6 +73,7 @@ export function createAuthRouter(prisma: PrismaClient) {
     res.json({ ok: true });
   });
 
+  // GET /api/auth/me
   router.get('/me', passport.authenticate('jwt', { session: false }), (req, res) => {
     const user = req.user as User | undefined;
     if (!user) {

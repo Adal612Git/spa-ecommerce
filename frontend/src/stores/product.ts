@@ -59,7 +59,12 @@ export const useProductStore = defineStore('products', {
         });
         if (this.filters.search) params.append('search', this.filters.search);
         if (this.filters.category) params.append('category', this.filters.category);
-        const res = await fetch(`/api/products?${params.toString()}`);
+
+        // 👇 usar la variable de entorno
+        const baseUrl = import.meta.env.VITE_API_URL;
+        const res = await fetch(`${baseUrl}/api/products?${params.toString()}`);
+
+
         if (!res.ok) throw new Error('Failed to fetch products');
         const json = await res.json();
         this.pages[page] = json.data as Product[];

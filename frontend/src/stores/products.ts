@@ -2,11 +2,13 @@ import { defineStore } from 'pinia';
 import axios from 'axios';
 import type { Product } from 'src/types/product';
 
+const baseUrl = import.meta.env.VITE_API_URL;
+
 export const useProductsStore = defineStore('adminProducts', {
   state: () => ({ products: [] as Product[] }),
   actions: {
     async fetch() {
-      const { data } = await axios.get('/api/admin/products');
+      const { data } = await axios.get(`${baseUrl}/api/admin/products`);
       this.products = data;
     },
     async save(product: Partial<Product>, images: File[]) {
@@ -15,19 +17,21 @@ export const useProductsStore = defineStore('adminProducts', {
         if (v != null) form.append(k, String(v));
       });
       images.forEach((img) => form.append('images', img));
+
       if (product.id) {
-        await axios.put(`/api/admin/products/${product.id}`, form);
+        await axios.put(`${baseUrl}/api/admin/products/${product.id}`, form);
       } else {
-        await axios.post('/api/admin/products', form);
+        await axios.post(`${baseUrl}/api/admin/products`, form);
       }
+
       await this.fetch();
     },
     async updateStock(id: number, stock: number) {
-      await axios.patch(`/api/admin/products/${id}/stock`, { stock });
+      await axios.patch(`${baseUrl}/api/admin/products/${id}/stock`, { stock });
       await this.fetch();
     },
     async delete(id: number) {
-      await axios.delete(`/api/admin/products/${id}`);
+      await axios.delete(`${baseUrl}/api/admin/products/${id}`);
       await this.fetch();
     },
   },
