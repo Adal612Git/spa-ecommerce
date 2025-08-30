@@ -27,9 +27,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import ProductCard from './ProductCard.vue';
-import { useProductsStore } from 'src/stores/productsStore';
+import { useProductStore } from 'stores/product';
 
-const store = useProductsStore();
+const store = useProductStore();
 const page = ref(1);
 const limit = 12;
 

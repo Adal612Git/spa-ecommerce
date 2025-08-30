@@ -22,11 +22,11 @@
 import { computed, onMounted } from 'vue';
 import ProductSearch from 'components/ProductSearch.vue';
 import ProductCard from 'components/ProductCard.vue';
-import { useProductStore } from 'stores/product'; // 👈 usar el store correcto
+import { useProductStore } from 'stores/product';
 import { useCartStore } from 'stores/cart';
 import type { Product } from 'src/types/product';
 
-const productStore = useProductStore(); // 👈 este es el de catálogo
+const productStore = useProductStore();
 const cartStore = useCartStore();
 
 const products = computed(() =>

@@ -13,7 +13,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useMeta } from 'quasar';
-import axios from 'axios';
+import { api } from 'src/api/api';
 
 const route = useRoute();
 import type { Product as BaseProduct } from 'src/types/product';
@@ -30,8 +30,7 @@ useMeta(() => ({ title: product.value?.name || 'Producto' }));
 
 onMounted(async () => {
   const slug = route.params.slug as string;
-const baseUrl = import.meta.env.VITE_API_URL;
-const { data } = await axios.get(`${baseUrl}/api/products/${slug}`);
+const { data } = await api.get(`/api/products/${slug}`);
   product.value = data;
 });
 </script>
