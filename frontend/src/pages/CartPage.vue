@@ -59,12 +59,10 @@ const subtotal = computed(() => cartStore.subtotal);
 const total = computed(() => cartStore.total);
 const currency = computed(() => cart.value[0]?.currency ?? 'USD');
 const $q = useQuasar();
-const apiBase =
-  import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
 
 async function pay() {
   try {
-    const orderRes = await fetch(`${apiBase}/checkout/create-order`, {
+    const orderRes = await fetch('/api/checkout/create-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -74,7 +72,7 @@ async function pay() {
     if (!orderRes.ok) throw new Error('Error creando orden');
     const { orderId } = await orderRes.json();
 
-    const prefRes = await fetch(`${apiBase}/checkout/create-preference`, {
+    const prefRes = await fetch('/api/checkout/create-preference', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderId }),
