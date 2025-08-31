@@ -79,6 +79,7 @@ async function pay() {
     });
     if (!prefRes.ok) throw new Error('Error creando preferencia');
     const { init_point } = await prefRes.json();
+    if (!init_point) throw new Error('init_point vacío');
     window.location.href = init_point;
   } catch (err) {
     $q.notify({ type: 'negative', message: (err as Error).message });
