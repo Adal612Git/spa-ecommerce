@@ -32,6 +32,7 @@ import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useProductsStore } from 'src/stores/products';
 import type { Product } from 'src/types/product';
+import axios from 'axios';
 
 const $q = useQuasar();
 const productsStore = useProductsStore();
@@ -40,10 +41,14 @@ async function fetchProducts() {
   try {
     await productsStore.fetch();
   } catch (err) {
-    $q.notify({
-      type: 'negative',
-      message: 'Error cargando productos: ' + (err as Error).message,
-    });
+    if (axios.isAxiosError(err) && [401, 403].includes(err.response?.status || 0)) {
+      $q.notify({ type: 'negative', message: 'Acceso denegado: se requiere rol ADMIN' });
+    } else {
+      $q.notify({
+        type: 'negative',
+        message: 'Error cargando productos: ' + (err as Error).message,
+      });
+    }
   }
 }
 
@@ -82,10 +87,14 @@ async function save() {
     dialog.value = false;
     await fetchProducts();
   } catch (err) {
-    $q.notify({
-      type: 'negative',
-      message: 'Error guardando producto: ' + (err as Error).message,
-    });
+    if (axios.isAxiosError(err) && [401, 403].includes(err.response?.status || 0)) {
+      $q.notify({ type: 'negative', message: 'Acceso denegado: se requiere rol ADMIN' });
+    } else {
+      $q.notify({
+        type: 'negative',
+        message: 'Error guardando producto: ' + (err as Error).message,
+      });
+    }
   }
 }
 async function remove(id: number) {
@@ -94,10 +103,14 @@ async function remove(id: number) {
     $q.notify({ type: 'positive', message: 'Producto eliminado' });
     await fetchProducts();
   } catch (err) {
-    $q.notify({
-      type: 'negative',
-      message: 'Error eliminando producto: ' + (err as Error).message,
-    });
+    if (axios.isAxiosError(err) && [401, 403].includes(err.response?.status || 0)) {
+      $q.notify({ type: 'negative', message: 'Acceso denegado: se requiere rol ADMIN' });
+    } else {
+      $q.notify({
+        type: 'negative',
+        message: 'Error eliminando producto: ' + (err as Error).message,
+      });
+    }
   }
 }
 </script>

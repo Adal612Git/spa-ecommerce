@@ -14,6 +14,7 @@ import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useOrdersStore } from 'src/stores/orders';
 import type { Order } from 'src/types/order';
+import axios from 'axios';
 
 const $q = useQuasar();
 const ordersStore = useOrdersStore();
@@ -30,10 +31,14 @@ async function fetch() {
   try {
     await ordersStore.fetch(filter.value);
   } catch (err) {
-    $q.notify({
-      type: 'negative',
-      message: 'Error cargando pedidos: ' + (err as Error).message,
-    });
+    if (axios.isAxiosError(err) && [401, 403].includes(err.response?.status || 0)) {
+      $q.notify({ type: 'negative', message: 'Acceso denegado: se requiere rol ADMIN' });
+    } else {
+      $q.notify({
+        type: 'negative',
+        message: 'Error cargando pedidos: ' + (err as Error).message,
+      });
+    }
   }
 }
 void fetch();
@@ -42,10 +47,14 @@ async function updateStatus(row: Order, status: string) {
     await ordersStore.updateStatus(row.id, status);
     $q.notify({ type: 'positive', message: 'Estado actualizado' });
   } catch (err) {
-    $q.notify({
-      type: 'negative',
-      message: 'Error actualizando pedido: ' + (err as Error).message,
-    });
+    if (axios.isAxiosError(err) && [401, 403].includes(err.response?.status || 0)) {
+      $q.notify({ type: 'negative', message: 'Acceso denegado: se requiere rol ADMIN' });
+    } else {
+      $q.notify({
+        type: 'negative',
+        message: 'Error actualizando pedido: ' + (err as Error).message,
+      });
+    }
   }
 }
 </script>
