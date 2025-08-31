@@ -29,11 +29,25 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useQuasar } from 'quasar';
 import { useProductsStore } from 'src/stores/products';
 import type { Product } from 'src/types/product';
 
+const $q = useQuasar();
 const productsStore = useProductsStore();
-void productsStore.fetch();
+
+async function fetchProducts() {
+  try {
+    await productsStore.fetch();
+  } catch (err) {
+    $q.notify({
+      type: 'negative',
+      message: 'Error cargando productos: ' + (err as Error).message,
+    });
+  }
+}
+
+void fetchProducts();
 
 interface AdminProduct extends Product {
   category?: string;
@@ -62,10 +76,28 @@ function onFiles(e: Event) {
   files.value = Array.from((e.target as HTMLInputElement).files || []);
 }
 async function save() {
-  await productsStore.save(form.value, files.value);
-  dialog.value = false;
+  try {
+    await productsStore.save(form.value, files.value);
+    $q.notify({ type: 'positive', message: 'Producto guardado' });
+    dialog.value = false;
+    await fetchProducts();
+  } catch (err) {
+    $q.notify({
+      type: 'negative',
+      message: 'Error guardando producto: ' + (err as Error).message,
+    });
+  }
 }
 async function remove(id: number) {
-  await productsStore.delete(id);
+  try {
+    await productsStore.delete(id);
+    $q.notify({ type: 'positive', message: 'Producto eliminado' });
+    await fetchProducts();
+  } catch (err) {
+    $q.notify({
+      type: 'negative',
+      message: 'Error eliminando producto: ' + (err as Error).message,
+    });
+  }
 }
 </script>

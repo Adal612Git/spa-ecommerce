@@ -1,85 +1,51 @@
 <template>
-  <div class="q-pa-md">
-    <q-table
-      title="Orders"
-      :rows="orders"
-      :columns="columns"
-      row-key="id"
-      :loading="loading"
-      :pagination="pagination"
-      @request="onRequest"
-    >
+  <q-page padding>
+    <q-select v-model="filter" :options="statuses" label="Estado" @update:model-value="() => void fetch()" />
+    <q-table :rows="ordersStore.orders" :columns="columns">
       <template #body-cell-status="props">
-        <q-td :props="props">
-          <OrderStatusBadge :status="props.row.status" />
-        </q-td>
+        <q-select v-model="props.row.status" :options="statuses" @update:model-value="async val => { await updateStatus(props.row, val); }" />
       </template>
     </q-table>
-  </div>
+  </q-page>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useAuthStore } from 'src/stores/auth';
-import type { QTableProps } from 'quasar';
-import OrderStatusBadge from 'components/OrderStatusBadge.vue';
+import { useQuasar } from 'quasar';
+import { useOrdersStore } from 'src/stores/orders';
+import type { Order } from 'src/types/order';
 
-interface Order {
-  id: number;
-  status: string;
-  total_cents: number;
-  created_at: string;
-}
-
-const apiBase =
-  import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
-const auth = useAuthStore();
-const orders = ref<Order[]>([]);
-const loading = ref(false);
-const pagination = ref({ page: 1, rowsPerPage: 10, rowsNumber: 0 });
-
-const columns: QTableProps['columns'] = [
-  { name: 'id', label: 'ID', field: 'id', align: 'left' },
-  { name: 'status', label: 'Estado', field: 'status', align: 'left' },
-  {
-    name: 'total',
-    label: 'Total',
-    field: (row: Order) =>
-      (row.total_cents / 100).toLocaleString('es-MX', {
-        style: 'currency',
-        currency: 'MXN',
-      }),
-  },
-  {
-    name: 'created_at',
-    label: 'Fecha',
-    field: (row: Order) => new Date(row.created_at).toLocaleString(),
-  },
+const $q = useQuasar();
+const ordersStore = useOrdersStore();
+const statuses = ['PENDING','CONFIRMED','SHIPPED','CANCELLED'];
+const columns = [
+  { name: 'id', label: 'ID', field: 'id' },
+  { name: 'status', label: 'Estado', field: 'status' },
+  { name: 'total', label: 'Total', field: 'totalCents', format: (v: number) => `$${(v / 100).toFixed(2)}` },
+  { name: 'createdAt', label: 'Fecha', field: 'createdAt' }
 ];
 
-async function fetchOrders(page = 1, limit = 10) {
-  loading.value = true;
+const filter = ref();
+async function fetch() {
   try {
-    const res = await fetch(`${apiBase}/admin/orders?page=${page}&limit=${limit}`, {
-      headers: { Authorization: `Bearer ${auth.token}` },
+    await ordersStore.fetch(filter.value);
+  } catch (err) {
+    $q.notify({
+      type: 'negative',
+      message: 'Error cargando pedidos: ' + (err as Error).message,
     });
-    if (res.ok) {
-      const data = await res.json();
-      orders.value = data.orders;
-      pagination.value.page = data.page;
-      pagination.value.rowsPerPage = data.limit;
-      pagination.value.rowsNumber = data.total;
-    }
-  } finally {
-    loading.value = false;
   }
 }
-
-async function onRequest(props: { pagination: { page: number; rowsPerPage: number } }) {
-  const { page, rowsPerPage } = props.pagination;
-  await fetchOrders(page, rowsPerPage);
+void fetch();
+async function updateStatus(row: Order, status: string) {
+  try {
+    await ordersStore.updateStatus(row.id, status);
+    $q.notify({ type: 'positive', message: 'Estado actualizado' });
+  } catch (err) {
+    $q.notify({
+      type: 'negative',
+      message: 'Error actualizando pedido: ' + (err as Error).message,
+    });
+  }
 }
-
-void fetchOrders();
 </script>
-

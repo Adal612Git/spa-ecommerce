@@ -18,6 +18,20 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
+  {
+    path: '/admin',
+    component: () => import('layouts/AdminLayout.vue'),
+    children: [
+      {
+        path: 'products',
+        component: () => import('pages/AdminProductsPage.vue'),
+      },
+      {
+        path: 'orders',
+        component: () => import('pages/AdminOrdersPage.vue'),
+      },
+    ],
+  },
   // Always leave this as last one,
   // but you can also remove it
   {
