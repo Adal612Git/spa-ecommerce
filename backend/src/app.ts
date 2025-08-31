@@ -27,8 +27,6 @@ import { createReviewsRouter } from './routes/reviews.js';
 import { createCouponsRouter } from './routes/coupons.js';
 // eslint-disable-next-line import/no-unresolved
 import { createShippingRouter } from './routes/shipping.js';
-// eslint-disable-next-line import/no-unresolved
-import checkoutRouter from './routes/checkout.js';
 
 interface RequestWithLog extends express.Request {
   log?: Logger;
@@ -156,7 +154,6 @@ export function createApp(prisma: PrismaClient) {
   app.use('/products', createProductsRouter(prisma));
   app.use('/api/orders', createOrdersRouter(prisma));
   app.use('/checkout', createOrdersRouter(prisma));
-  app.use('/api/checkout', checkoutRouter);
   app.use('/webhook/mercadopago', webhookLimiter);
   app.use('/webhook', createWebhookRouter(prisma));
   app.use('/admin/reviews', createReviewsRouter(prisma));

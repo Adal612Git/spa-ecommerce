@@ -152,50 +152,38 @@ export function createOrdersRouter(
     }
   });
 
-  router.post('/create-preference', async (req, res, next) => {
-    const schema = z.object({ orderId: z.number().int().positive() });
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.flatten() });
+  router.post('/create-preference', async (req, res) => {
+    const items = req.body as Array<{ title: string; quantity: number; unit_price: number }>;
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ success: false, error: 'No items provided' });
     }
-    const { orderId } = parsed.data;
 
     try {
-      const order = await prisma.order.findUnique({
-        where: { id: orderId },
-        include: { items: { include: { product: true } } },
-      });
-      if (!order) {
-        return res.status(404).json({ error: 'Order not found' });
-      }
-
       const mp = new MercadoPagoConfig({
         accessToken: process.env.MP_ACCESS_TOKEN || '',
       });
+
       const preference = await new Preference(mp).create({
-        items: order.items.map((item) => ({
-          title: item.product.name,
-          quantity: item.quantity,
-          unit_price: item.unitPriceCents / 100,
-          currency_id: 'MXN',
-        })),
-        back_urls: {
-          success: `${process.env.CORS_ORIGIN}/checkout/success`,
-          failure: `${process.env.CORS_ORIGIN}/checkout/failure`,
-          pending: `${process.env.CORS_ORIGIN}/checkout/pending`,
+        body: {
+          items,
+          back_urls: {
+            success: 'http://localhost:9000/success',
+            failure: 'http://localhost:9000/failure',
+            pending: 'http://localhost:9000/pending',
+          },
         },
-        auto_return: 'approved',
-        external_reference: orderId.toString(),
       });
 
-      await prisma.order.update({
-        where: { id: orderId },
-        data: { mp_preference_id: preference.id },
+      return res.json({
+        success: true,
+        preferenceId: preference.id,
+        init_point: preference.init_point,
       });
-
-      res.json({ init_point: preference.init_point });
-    } catch (err) {
-      next(err);
+    } catch {
+      return res
+        .status(500)
+        .json({ success: false, error: 'Error creando preferencia' });
     }
   });
 
