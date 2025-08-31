@@ -4,7 +4,6 @@ import express from 'express';
 import passport from 'passport';
 import http from 'http';
 import { Server } from 'socket.io';
-import jwt from 'jsonwebtoken';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -180,30 +179,16 @@ startAbandonedCartJob(prisma);
 
 const server = http.createServer(app);
 
-const io = new Server(server, {
+export const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: process.env.CORS_ORIGIN || 'http://localhost:9000',
+    credentials: true,
   },
 });
 
-io.use((socket, next) => {
-  const token = socket.handshake.auth?.token as string | undefined;
-  if (!token) return next(new Error('Unauthorized'));
-  try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET || 'secret') as {
-      sub?: string;
-    };
-    if (payload.sub) {
-      socket.join(`user:${payload.sub}`);
-    }
-    return next();
-  } catch (err) {
-    return next(new Error('Unauthorized'));
-  }
-});
-
-io.on('connection', () => {
-  // ready for events
+io.on('connection', (socket) => {
+  console.log('Cliente conectado:', socket.id);
+  socket.emit('hello', { msg: 'Bienvenido desde el backend 🚀' });
 });
 
 app.set('io', io);
