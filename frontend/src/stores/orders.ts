@@ -16,14 +16,17 @@ export const useOrdersStore = defineStore('adminOrders', {
           headers: { Authorization: `Bearer ${auth.token}` },
         });
         this.orders = data;
-      } catch (err: any) {
-        const statusCode = err.response?.status;
+      } catch (err: unknown) {
+        const e = err as { response?: { status?: number } };
+        const status = e.response?.status;
         $q.notify({
           type: 'negative',
           message:
-            statusCode === 401 || statusCode === 403
-              ? 'No autorizado'
-              : err.response?.data?.message || 'Error al cargar órdenes',
+            status === 401
+              ? 'No autorizado: inicia sesión como admin'
+              : status
+              ? `Error ${status}`
+              : 'Error inesperado',
         });
       }
     },
@@ -38,14 +41,17 @@ export const useOrdersStore = defineStore('adminOrders', {
         );
         $q.notify({ type: 'positive', message: 'Estado actualizado' });
         await this.fetch();
-      } catch (err: any) {
-        const statusCode = err.response?.status;
+      } catch (err: unknown) {
+        const e = err as { response?: { status?: number } };
+        const status = e.response?.status;
         $q.notify({
           type: 'negative',
           message:
-            statusCode === 401 || statusCode === 403
-              ? 'No autorizado'
-              : err.response?.data?.message || 'Error al actualizar orden',
+            status === 401
+              ? 'No autorizado: inicia sesión como admin'
+              : status
+              ? `Error ${status}`
+              : 'Error inesperado',
         });
       }
     },
