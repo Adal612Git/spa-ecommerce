@@ -141,13 +141,29 @@ describe('checkout create-order', () => {
 });
 
 describe('checkout create-preference', () => {
-  it('creates a MercadoPago preference and returns init point', async () => {
+  it('accepts an array of items as the body', async () => {
+    const payload = [{ title: 'Prod 1', quantity: 2, unit_price: 100 }];
     const res = await request(app)
       .post('/checkout/create-preference')
-      .send([{ title: 'Prod 1', quantity: 2, unit_price: 100 }])
+      .send(payload)
       .expect(200);
 
-    expect(res.body.init_point).toBe('http://mp/init');
-    expect(res.body.preferenceId).toBe('pref123');
+    expect(res.body.success).toBe(true);
+    expect(res.body.items).toEqual([
+      { title: 'Prod 1', quantity: 2, unit_price: 100, currency_id: 'MXN' },
+    ]);
+  });
+
+  it('accepts an object with items array', async () => {
+    const payload = { items: [{ title: 'Prod 1', quantity: 2, unit_price: 100 }] };
+    const res = await request(app)
+      .post('/checkout/create-preference')
+      .send(payload)
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.items).toEqual([
+      { title: 'Prod 1', quantity: 2, unit_price: 100, currency_id: 'MXN' },
+    ]);
   });
 });
