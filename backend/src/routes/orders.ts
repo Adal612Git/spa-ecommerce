@@ -168,11 +168,28 @@ export function createOrdersRouter(
   });
 
   router.post('/create-preference', async (req, res) => {
-    const items = req.body as Array<{ title: string; quantity: number; unit_price: number }>;
+    req.log?.info({ body: req.body }, 'Received create-preference body');
+
+    let items: Array<{ title: string; quantity: number; unit_price: number; currency_id?: string }> = [];
+
+    if (Array.isArray(req.body)) {
+      items = req.body;
+    } else if (Array.isArray(req.body.items)) {
+      items = req.body.items;
+    } else if (req.body?.preference && Array.isArray(req.body.preference.items)) {
+      items = req.body.preference.items;
+    }
 
     if (!Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ success: false, error: 'No items provided' });
+      return res.status(400).json({ success: false, message: 'No items provided' });
     }
+
+    const normalizedItems = items.map((item) => ({
+      ...item,
+      currency_id: item.currency_id ?? 'MXN',
+    }));
+
+    req.log?.info({ items: normalizedItems }, 'Items to send to MercadoPago');
 
     try {
       const mp = new MercadoPagoConfig({
@@ -181,7 +198,7 @@ export function createOrdersRouter(
 
       const preference = await new Preference(mp).create({
         body: {
-          items,
+          items: normalizedItems,
           back_urls: {
             success: 'http://localhost:9000/success',
             failure: 'http://localhost:9000/failure',
@@ -190,15 +207,23 @@ export function createOrdersRouter(
         },
       });
 
+      req.log?.info({ preference }, 'MercadoPago preference response');
+
       return res.json({
         success: true,
-        preferenceId: preference.id,
-        init_point: preference.init_point,
+        id: preference.id,
+        items: normalizedItems,
       });
-    } catch {
-      return res
-        .status(500)
-        .json({ success: false, error: 'Error creando preferencia' });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      const stack = err instanceof Error ? err.stack : undefined;
+      req.log?.error({ err }, 'Error creating MercadoPago preference');
+      return res.status(500).json({
+        success: false,
+        message: 'Error creando preferencia',
+        error: message,
+        stack,
+      });
     }
   });
 
