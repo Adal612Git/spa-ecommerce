@@ -2,56 +2,102 @@ import { defineStore } from 'pinia';
 import { api } from 'src/api/api';
 import type { Product } from 'src/types/product';
 import { useAuthStore } from './auth';
+import { useQuasar } from 'quasar';
 
 export const useProductsStore = defineStore('adminProducts', {
   state: () => ({ products: [] as Product[] }),
   actions: {
     async fetch() {
       const auth = useAuthStore();
-      const { data } = await api.get('/admin/products', {
-        baseURL: '',
-        headers: { Authorization: `Bearer ${auth.token}` },
-      });
-      this.products = data;
+      const $q = useQuasar();
+      try {
+        const { data } = await api.get('/api/admin/products', {
+          headers: { Authorization: `Bearer ${auth.token}` },
+        });
+        this.products = data;
+      } catch (err: any) {
+        const status = err.response?.status;
+        $q.notify({
+          type: 'negative',
+          message:
+            status === 401 || status === 403
+              ? 'No autorizado'
+              : err.response?.data?.message || 'Error al cargar productos',
+        });
+      }
     },
     async save(product: Partial<Product>, images: File[]) {
       const auth = useAuthStore();
+      const $q = useQuasar();
       const form = new FormData();
       Object.entries(product).forEach(([k, v]) => {
         if (v != null) form.append(k, String(v));
       });
       images.forEach((img) => form.append('images', img));
-
-      if (product.id) {
-        await api.put(`/admin/products/${product.id}`, form, {
-          baseURL: '',
-          headers: { Authorization: `Bearer ${auth.token}` },
-        });
-      } else {
-        await api.post('/admin/products', form, {
-          baseURL: '',
-          headers: { Authorization: `Bearer ${auth.token}` },
+      try {
+        if (product.id) {
+          await api.put(`/api/admin/products/${product.id}`, form, {
+            headers: { Authorization: `Bearer ${auth.token}` },
+          });
+        } else {
+          await api.post('/api/admin/products', form, {
+            headers: { Authorization: `Bearer ${auth.token}` },
+          });
+        }
+        $q.notify({ type: 'positive', message: 'Producto guardado' });
+        await this.fetch();
+      } catch (err: any) {
+        const status = err.response?.status;
+        $q.notify({
+          type: 'negative',
+          message:
+            status === 401 || status === 403
+              ? 'No autorizado'
+              : err.response?.data?.message || 'Error al guardar producto',
         });
       }
-
-      await this.fetch();
     },
     async updateStock(id: number, stock: number) {
       const auth = useAuthStore();
-      await api.patch(
-        `/admin/products/${id}/stock`,
-        { stock },
-        { baseURL: '', headers: { Authorization: `Bearer ${auth.token}` } }
-      );
-      await this.fetch();
+      const $q = useQuasar();
+      try {
+        await api.patch(
+          `/api/admin/products/${id}/stock`,
+          { stock },
+          { headers: { Authorization: `Bearer ${auth.token}` } }
+        );
+        $q.notify({ type: 'positive', message: 'Stock actualizado' });
+        await this.fetch();
+      } catch (err: any) {
+        const status = err.response?.status;
+        $q.notify({
+          type: 'negative',
+          message:
+            status === 401 || status === 403
+              ? 'No autorizado'
+              : err.response?.data?.message || 'Error al actualizar stock',
+        });
+      }
     },
     async delete(id: number) {
       const auth = useAuthStore();
-      await api.delete(`/admin/products/${id}`, {
-        baseURL: '',
-        headers: { Authorization: `Bearer ${auth.token}` },
-      });
-      await this.fetch();
+      const $q = useQuasar();
+      try {
+        await api.delete(`/api/admin/products/${id}`, {
+          headers: { Authorization: `Bearer ${auth.token}` },
+        });
+        $q.notify({ type: 'positive', message: 'Producto eliminado' });
+        await this.fetch();
+      } catch (err: any) {
+        const status = err.response?.status;
+        $q.notify({
+          type: 'negative',
+          message:
+            status === 401 || status === 403
+              ? 'No autorizado'
+              : err.response?.data?.message || 'Error al eliminar producto',
+        });
+      }
     },
   },
 });
