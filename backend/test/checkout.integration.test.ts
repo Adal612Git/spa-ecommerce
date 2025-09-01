@@ -117,6 +117,27 @@ describe('checkout create-order', () => {
       .expect(400);
     expect(prisma.createdOrder).toBeNull();
   });
+
+  it('creates an order with default zone and zero shipping when rate missing', async () => {
+    const res = await request(app)
+      .post('/checkout/create-order')
+      .send({ items: [{ productId: 1, quantity: 1 }] })
+      .expect(200);
+
+    expect(res.body.zone).toBe('default');
+    expect(res.body.shipping_cents).toBe(0);
+    expect(prisma.createdOrder.shipping_cents).toBe(0);
+  });
+
+  it('returns 400 for invalid non-default zone', async () => {
+    const res = await request(app)
+      .post('/checkout/create-order')
+      .send({ items: [{ productId: 1, quantity: 1 }], zone: 'SUR' })
+      .expect(400);
+
+    expect(res.body).toEqual({ error: 'Invalid shipping zone' });
+    expect(prisma.createdOrder).toBeNull();
+  });
 });
 
 describe('checkout create-preference', () => {
