@@ -42,7 +42,10 @@
           Total: {{ (total / 100).toFixed(2) }}
           {{ currency }}
         </div>
-        <q-btn color="primary" label="Pagar" class="q-mt-md" @click="async () => { await pay(); }" />
+        <div class="q-mt-md">
+          <q-btn color="primary" label="Pagar" @click="async () => { await pay(); }" />
+          <q-btn color="negative" label="Cancelar" class="q-ml-sm" @click="async () => { await cancelOrder(); }" />
+        </div>
       </div>
     </div>
   </q-page>
@@ -85,6 +88,32 @@ async function pay() {
       type: 'positive',
       message: `Orden #${data.orderId} pagada correctamente`,
     });
+  } catch (err) {
+    $q.notify({ type: 'negative', message: (err as Error).message });
+  }
+}
+
+async function cancelOrder() {
+  try {
+    const input = prompt('ID de la orden a cancelar');
+    if (!input) return;
+    const orderId = Number(input);
+    if (Number.isNaN(orderId)) throw new Error('ID de orden inválido');
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (auth.token) {
+      headers.Authorization = `Bearer ${auth.token}`;
+    }
+    const res = await fetch('/api/checkout/cancel-order', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ orderId }),
+    });
+    if (!res.ok) throw new Error('Error cancelando orden');
+    const data = await res.json();
+    if (data.cartCleared) {
+      cartStore.cart = [];
+    }
+    $q.notify({ type: 'positive', message: 'Orden cancelada y carrito vaciado' });
   } catch (err) {
     $q.notify({ type: 'negative', message: (err as Error).message });
   }
