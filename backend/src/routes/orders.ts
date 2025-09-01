@@ -124,7 +124,6 @@ export function createOrdersRouter(
       const order = await prisma.order.create({
         data: {
           status: 'PENDING',
-          currency: 'MXN',
           totalCents: total - discount + shippingCents,
           shipping_cents: shippingCents,
           items: {
