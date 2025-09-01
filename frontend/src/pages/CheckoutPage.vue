@@ -48,9 +48,7 @@
           <q-btn
             label="Cancelar"
             color="negative"
-            @click="async () => {
-              await cancel();
-            }"
+            @click="cancelOrder"
           />
         </div>
       </div>
@@ -64,13 +62,12 @@ import { ref, computed } from 'vue';
 import { useCartStore } from 'stores/cart';
 import { useCouponStore } from 'stores/coupons';
 import { useShippingStore } from 'stores/shipping';
-import { useAuthStore } from 'stores/auth';
 import { useQuasar } from 'quasar';
+import { api } from 'src/api/api';
 
 const cartStore = useCartStore();
 const couponStore = useCouponStore();
 const shippingStore = useShippingStore();
-const auth = useAuthStore();
 const cart = computed(() => cartStore.cart);
 const subtotal = computed(() => cartStore.subtotal);
 const discount = computed(() => couponStore.coupon?.discount ?? 0);
@@ -135,25 +132,21 @@ async function pay() {
   }
 }
 
-async function cancel() {
+async function cancelOrder() {
   try {
-    const res = await fetch(`${apiBase}/checkout/cancel-order`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${auth.token}` },
-    });
-    const data = await res.json();
-    if (!res.ok || !data.success) {
-      throw new Error(data.message || 'Error cancelando orden');
-    }
+    await api.post('/checkout/cancel-order');
     cartStore.cart = [];
+    // @ts-ignore - mantener compatibilidad si existe `items`
+    cartStore.items = [];
     $q.notify({
-      type: 'positive',
+      type: 'negative',
       message: 'Orden cancelada y carrito vaciado',
     });
   } catch (err) {
+    console.error(err);
     $q.notify({
       type: 'negative',
-      message: (err as Error).message,
+      message: 'Error al cancelar la orden',
     });
   }
 }

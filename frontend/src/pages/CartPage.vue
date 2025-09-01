@@ -44,7 +44,12 @@
         </div>
         <div class="q-mt-md">
           <q-btn color="primary" label="Pagar" @click="async () => { await pay(); }" />
-          <q-btn color="negative" label="Cancelar" class="q-ml-sm" @click="async () => { await cancelOrder(); }" />
+          <q-btn
+            color="negative"
+            label="Cancelar"
+            class="q-ml-sm"
+            @click="cancelOrder"
+          />
         </div>
       </div>
     </div>
@@ -56,6 +61,7 @@ import { computed } from 'vue';
 import { useCartStore } from 'stores/cart';
 import { useAuthStore } from 'stores/auth';
 import { useQuasar } from 'quasar';
+import { api } from 'src/api/api';
 
 const cartStore = useCartStore();
 const auth = useAuthStore();
@@ -95,27 +101,17 @@ async function pay() {
 
 async function cancelOrder() {
   try {
-    const input = prompt('ID de la orden a cancelar');
-    if (!input) return;
-    const orderId = Number(input);
-    if (Number.isNaN(orderId)) throw new Error('ID de orden inválido');
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (auth.token) {
-      headers.Authorization = `Bearer ${auth.token}`;
-    }
-    const res = await fetch('/api/checkout/cancel-order', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ orderId }),
+    await api.post('/checkout/cancel-order');
+    cartStore.cart = [];
+    // @ts-ignore - mantener compatibilidad si existe `items`
+    cartStore.items = [];
+    $q.notify({
+      type: 'negative',
+      message: 'Orden cancelada y carrito vaciado',
     });
-    if (!res.ok) throw new Error('Error cancelando orden');
-    const data = await res.json();
-    if (data.cartCleared) {
-      cartStore.cart = [];
-    }
-    $q.notify({ type: 'positive', message: 'Orden cancelada y carrito vaciado' });
   } catch (err) {
-    $q.notify({ type: 'negative', message: (err as Error).message });
+    console.error(err);
+    $q.notify({ type: 'negative', message: 'Error al cancelar la orden' });
   }
 }
 </script>
