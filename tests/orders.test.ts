@@ -104,6 +104,7 @@ describe('orders', () => {
       orderId: 1,
       status: 'PAID',
       totalCents: 1000,
+      cartCleared: false,
     });
     expect(prisma.orders[0]).toBeTruthy();
     expect(prisma.orders[0].status).toBe('PAID');

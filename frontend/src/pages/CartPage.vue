@@ -51,9 +51,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useCartStore } from 'stores/cart';
+import { useAuthStore } from 'stores/auth';
 import { useQuasar } from 'quasar';
 
 const cartStore = useCartStore();
+const auth = useAuthStore();
 const cart = computed(() => cartStore.cart);
 const subtotal = computed(() => cartStore.subtotal);
 const total = computed(() => cartStore.total);
@@ -62,9 +64,13 @@ const $q = useQuasar();
 
 async function pay() {
   try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (auth.token) {
+      headers.Authorization = `Bearer ${auth.token}`;
+    }
     const orderRes = await fetch('/api/checkout/create-order', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         items: cart.value.map((l) => ({ productId: l.productId, quantity: l.qty })),
       }),
@@ -72,6 +78,9 @@ async function pay() {
     if (!orderRes.ok) throw new Error('Error creando orden');
     const data = await orderRes.json();
     if (!data.success) throw new Error('Pago no procesado');
+    if (data.cartCleared) {
+      cartStore.cart = [];
+    }
     $q.notify({
       type: 'positive',
       message: `Orden #${data.orderId} pagada correctamente`,
