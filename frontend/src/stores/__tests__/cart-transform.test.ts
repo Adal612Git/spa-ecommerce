@@ -13,21 +13,18 @@ vi.mock('axios', () => ({
   create: () => axiosInstance,
 }));
 
-vi.mock('quasar', () => ({ useQuasar: vi.fn() }));
+vi.mock('quasar', () => ({ Notify: { create: vi.fn() } }));
 
 import { useCartStore } from '../cart';
 import { useAuthStore } from '../auth';
-import { useQuasar } from 'quasar';
+import { Notify } from 'quasar';
 
 const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('cart store transform', () => {
-  let notify: ReturnType<typeof vi.fn>;
-
   beforeEach(() => {
     setActivePinia(createPinia());
-    notify = vi.fn();
-    (useQuasar as unknown as Mock).mockReturnValue({ notify });
+    (Notify.create as unknown as Mock).mockReset();
     axiosInstance.get.mockReset();
     axiosInstance.post.mockReset();
     // stub localStorage

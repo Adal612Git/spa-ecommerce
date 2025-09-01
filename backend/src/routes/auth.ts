@@ -13,7 +13,10 @@ export const registerSchema = z.object({
   password: z.string().min(8),
   name: z.string().min(1).optional(), // 👈 ahora acepta name opcional
 });
-export const loginSchema = registerSchema.omit({ name: true });
+export const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+});
 
 const JWT_SECRET = process.env.JWT_SECRET ?? '';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';

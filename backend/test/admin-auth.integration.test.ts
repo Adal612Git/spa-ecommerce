@@ -16,7 +16,7 @@ process.env.JWT_EXPIRES_IN = '7d';
 
 let createApp: typeof import('../src/app.js').createApp;
 
-const admin1Hash = bcrypt.hashSync('admin1234', 1);
+const admin1Hash = bcrypt.hashSync('admin', 1);
 const admin2Hash = bcrypt.hashSync('admin12345', 1);
 
 class FakePrisma {
@@ -34,7 +34,19 @@ class FakePrisma {
   };
 
   product = {
-    findMany: async () => [],
+    findMany: async () => [
+      {
+        id: 1,
+        name: 'Prod',
+        slug: 'prod',
+        description: 'desc',
+        priceCents: 100,
+        category: 'cat',
+        status: 'ACTIVE',
+        stock: 1,
+        images: [],
+      },
+    ],
   };
 }
 
@@ -56,7 +68,7 @@ describe('admin auth', () => {
   it('allows seeded admins to login and access protected routes', async () => {
     const login1 = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'admin@example.com', password: 'admin1234' })
+      .send({ email: 'admin@example.com', password: 'admin' })
       .expect(200);
     expect(login1.body.token).toBeTruthy();
 
@@ -66,10 +78,11 @@ describe('admin auth', () => {
       .expect(200);
     expect(login2.body.token).toBeTruthy();
 
-    await request(app)
+    const products = await request(app)
       .get('/api/admin/products')
       .set('Authorization', `Bearer ${login1.body.token}`)
       .expect(200);
+    expect(products.body).toHaveLength(1);
 
     await request(app).get('/api/admin/products').expect(401);
   });

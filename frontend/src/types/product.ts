@@ -6,5 +6,7 @@ export interface Product {
   priceCents: number;
   currency: string;
   stock: number;
+  category: string;
+  status: 'ACTIVE' | 'INACTIVE';
   image_url?: string;
 }
