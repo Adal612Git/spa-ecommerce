@@ -102,10 +102,15 @@ export function createOrdersRouter(
           maxWeight: { gte: weight },
         },
       });
+      let shippingCents = 0;
       if (!rate) {
-        return res.status(400).json({ error: 'Invalid shipping zone' });
+        if (zone !== 'default') {
+          return res.status(400).json({ error: 'Invalid shipping zone' });
+        }
+        shippingCents = 0;
+      } else {
+        shippingCents = rate.priceCents;
       }
-      const shippingCents = rate.priceCents;
 
       let discount = 0;
       if (couponId) {
@@ -151,7 +156,12 @@ export function createOrdersRouter(
         });
       }
 
-      res.json({ orderId: order.id, totalCents: order.totalCents });
+      res.json({
+        orderId: order.id,
+        totalCents: order.totalCents,
+        zone,
+        shipping_cents: shippingCents,
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       res.status(500).json({ error: message });
