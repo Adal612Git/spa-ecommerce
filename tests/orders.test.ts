@@ -21,7 +21,12 @@ class FakePrisma {
   products = [{ id: 1, priceCents: 1000, stock: 5 }];
   orders: any[] = [];
   events: any[] = [];
-  shippingRates = [{ zone: 'NORTE', minWeight: 1, maxWeight: 10, priceCents: 0 }];
+  shippingRates = [
+    { zone: 'NORTE', minWeight: 1, maxWeight: 10, priceCents: 0 },
+    { zone: 'default', minWeight: 1, maxWeight: 10, priceCents: 0 },
+  ];
+
+  lastShippingZone?: string;
 
   product = {
     findMany: async ({ where }: any) => {
@@ -39,6 +44,7 @@ class FakePrisma {
 
   shippingRate = {
     findFirst: async ({ where }: any) => {
+      this.lastShippingZone = where.zone;
       return this.shippingRates.find((r) => r.zone === where.zone) || null;
     },
   };
@@ -81,6 +87,16 @@ beforeEach(() => {
 });
 
 describe('orders', () => {
+  it('creates order with default zone when none provided', async () => {
+    await request(app)
+      .post('/api/orders/create-order')
+      .send({ items: [{ productId: 1, quantity: 1 }] })
+      .expect(200);
+
+    expect(prisma.orders[0]).toBeTruthy();
+    expect(prisma.lastShippingZone).toBe('default');
+  });
+
   it('creates order and confirms via webhook', async () => {
     const createRes = await request(app)
       .post('/api/orders/create-order')

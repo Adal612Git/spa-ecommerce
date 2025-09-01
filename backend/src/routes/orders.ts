@@ -12,7 +12,11 @@ import { authenticate } from '../middleware/auth.js';
 const createOrderSchema = z.object({
   email: z.string().email().optional(),
   couponId: z.number().int().optional(),
-  zone: z.string().min(1),
+  // zone is optional; if missing or empty, default to "default"
+  zone: z
+    .string()
+    .optional()
+    .transform((val) => (val && val.trim() !== '' ? val : 'default')),
   items: z
     .array(
       z.object({
@@ -63,7 +67,8 @@ export function createOrdersRouter(
   router.post('/create-order', async (req, res, next) => {
     const parsed = createOrderSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.flatten() });
+      const message = parsed.error.issues.map((i) => i.message).join(', ');
+      return res.status(400).json({ error: message });
     }
 
     const { items, email, couponId, zone } = parsed.data;
@@ -148,7 +153,8 @@ export function createOrdersRouter(
 
       res.json({ orderId: order.id, totalCents: order.totalCents });
     } catch (err) {
-      next(err);
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      res.status(500).json({ error: message });
     }
   });
 
