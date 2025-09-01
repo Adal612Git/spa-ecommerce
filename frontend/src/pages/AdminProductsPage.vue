@@ -58,10 +58,10 @@ async function fetchProducts() {
 
 void fetchProducts();
 
-interface AdminProduct extends Product {
+type AdminProduct = Partial<Product> & {
   category?: string;
-  status?: string;
-}
+  status?: 'ACTIVE' | 'INACTIVE';
+};
 
 const columns = [
   { name: 'name', label: 'Nombre', field: 'name' },
@@ -72,7 +72,7 @@ const columns = [
 ];
 
 const dialog = ref(false);
-const form = ref<Partial<AdminProduct>>({});
+const form = ref<AdminProduct>({});
 const files = ref<File[]>([]);
 const statusOptions = ['DRAFT','ACTIVE','INACTIVE'];
 
