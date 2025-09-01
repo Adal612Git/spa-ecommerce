@@ -41,6 +41,9 @@ export function createAdminRouter(prisma: PrismaClient) {
     requireRole('ADMIN', 'MODERATOR'),
     upload.array('images'),
     async (req, res) => {
+      if (!req.is('multipart/form-data')) {
+        return res.status(415).json({ message: 'Content-Type must be multipart/form-data' });
+      }
       const { name, description, priceCents, category, status, stock } = req.body;
       if (Number(priceCents) < 0 || Number(stock) < 0) {
         return res.status(400).json({ message: 'Invalid price or stock' });
@@ -75,6 +78,9 @@ export function createAdminRouter(prisma: PrismaClient) {
     requireRole('ADMIN', 'MODERATOR'),
     upload.array('images'),
     async (req, res) => {
+      if (!req.is('multipart/form-data')) {
+        return res.status(415).json({ message: 'Content-Type must be multipart/form-data' });
+      }
       const { id } = req.params;
       const { name, description, priceCents, category, status, stock } = req.body;
       if (Number(priceCents) < 0 || Number(stock) < 0) {

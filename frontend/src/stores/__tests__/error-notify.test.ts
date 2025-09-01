@@ -14,30 +14,27 @@ vi.mock('src/api/api', () => ({
 }));
 
 vi.mock('quasar', () => ({
-  useQuasar: vi.fn(),
+  Notify: { create: vi.fn() },
 }));
 
 import { useProductsStore } from '../products';
 import { useOrdersStore } from '../orders';
 import { api } from 'src/api/api';
-import { useQuasar } from 'quasar';
+import { Notify } from 'quasar';
 
 describe('stores error handling', () => {
-  let notify: ReturnType<typeof vi.fn>;
-
   beforeEach(() => {
     setActivePinia(createPinia());
-    notify = vi.fn();
-    (useQuasar as unknown as Mock).mockReturnValue({ notify });
+    (Notify.create as unknown as Mock).mockReset();
   });
 
   it('notifies unauthorized on 401', async () => {
     (api.get as unknown as Mock).mockRejectedValueOnce({ response: { status: 401 } });
     const store = useProductsStore();
     await store.fetch();
-    expect(notify).toHaveBeenCalledWith({
+    expect(Notify.create).toHaveBeenCalledWith({
       type: 'negative',
-      message: 'No autorizado: inicia sesión como admin',
+      message: 'No autorizado, inicia sesión como admin',
     });
   });
 
@@ -45,9 +42,9 @@ describe('stores error handling', () => {
     (api.get as unknown as Mock).mockRejectedValueOnce({ response: { status: 500 } });
     const store = useOrdersStore();
     await store.fetch();
-    expect(notify).toHaveBeenCalledWith({
+    expect(Notify.create).toHaveBeenCalledWith({
       type: 'negative',
-      message: 'Error 500',
+      message: 'Error inesperado, inténtalo de nuevo',
     });
   });
 

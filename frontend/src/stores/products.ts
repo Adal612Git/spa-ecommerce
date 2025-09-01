@@ -2,14 +2,13 @@ import { defineStore } from 'pinia';
 import { api } from 'src/api/api';
 import type { Product } from 'src/types/product';
 import { useAuthStore } from './auth';
-import { useQuasar } from 'quasar';
+import { Notify } from 'quasar';
 
 export const useProductsStore = defineStore('adminProducts', {
   state: () => ({ products: [] as Product[] }),
   actions: {
     async fetch() {
       const auth = useAuthStore();
-      const $q = useQuasar();
       try {
         const { data } = await api.get('/api/admin/products', {
           headers: { Authorization: `Bearer ${auth.token}` },
@@ -18,28 +17,29 @@ export const useProductsStore = defineStore('adminProducts', {
       } catch (err: unknown) {
         const e = err as { response?: { status?: number } };
         const status = e.response?.status;
-        $q.notify({
+        Notify.create({
           type: 'negative',
           message:
-            status === 401
-              ? 'No autorizado: inicia sesión como admin'
-              : status
-              ? `Error ${status}`
-              : 'Error inesperado',
+            status === 401 || status === 403
+              ? 'No autorizado, inicia sesión como admin'
+              : 'Error inesperado, inténtalo de nuevo',
         });
       }
     },
     async save(product: Partial<Product>, images: File[]) {
       const auth = useAuthStore();
-      const $q = useQuasar();
       const form = new FormData();
-      Object.entries(product).forEach(([k, v]) => {
-        if (v != null) form.append(k, String(v));
-      });
+      const { id, name, priceCents, stock, category, status, description } = product;
+      if (name != null) form.append('name', String(name));
+      if (description != null) form.append('description', String(description));
+      if (priceCents != null) form.append('priceCents', String(priceCents));
+      if (stock != null) form.append('stock', String(stock));
+      if (category != null) form.append('category', String(category));
+      if (status != null) form.append('status', String(status));
       images.forEach((img) => form.append('images', img));
       try {
-        if (product.id) {
-          await api.put(`/api/admin/products/${product.id}`, form, {
+        if (id) {
+          await api.put(`/api/admin/products/${id}`, form, {
             headers: { Authorization: `Bearer ${auth.token}` },
           });
         } else {
@@ -47,67 +47,59 @@ export const useProductsStore = defineStore('adminProducts', {
             headers: { Authorization: `Bearer ${auth.token}` },
           });
         }
-        $q.notify({ type: 'positive', message: 'Producto guardado' });
+        Notify.create({ type: 'positive', message: 'Producto guardado' });
         await this.fetch();
       } catch (err: unknown) {
         const e = err as { response?: { status?: number } };
         const status = e.response?.status;
-        $q.notify({
+        Notify.create({
           type: 'negative',
           message:
-            status === 401
-              ? 'No autorizado: inicia sesión como admin'
-              : status
-              ? `Error ${status}`
-              : 'Error inesperado',
+            status === 401 || status === 403
+              ? 'No autorizado, inicia sesión como admin'
+              : 'Error inesperado, inténtalo de nuevo',
         });
       }
     },
     async updateStock(id: number, stock: number) {
       const auth = useAuthStore();
-      const $q = useQuasar();
       try {
         await api.patch(
           `/api/admin/products/${id}/stock`,
           { stock },
           { headers: { Authorization: `Bearer ${auth.token}` } }
         );
-        $q.notify({ type: 'positive', message: 'Stock actualizado' });
+        Notify.create({ type: 'positive', message: 'Stock actualizado' });
         await this.fetch();
       } catch (err: unknown) {
         const e = err as { response?: { status?: number } };
         const status = e.response?.status;
-        $q.notify({
+        Notify.create({
           type: 'negative',
           message:
-            status === 401
-              ? 'No autorizado: inicia sesión como admin'
-              : status
-              ? `Error ${status}`
-              : 'Error inesperado',
+            status === 401 || status === 403
+              ? 'No autorizado, inicia sesión como admin'
+              : 'Error inesperado, inténtalo de nuevo',
         });
       }
     },
     async delete(id: number) {
       const auth = useAuthStore();
-      const $q = useQuasar();
       try {
         await api.delete(`/api/admin/products/${id}`, {
           headers: { Authorization: `Bearer ${auth.token}` },
         });
-        $q.notify({ type: 'positive', message: 'Producto eliminado' });
+        Notify.create({ type: 'positive', message: 'Producto eliminado' });
         await this.fetch();
       } catch (err: unknown) {
         const e = err as { response?: { status?: number } };
         const status = e.response?.status;
-        $q.notify({
+        Notify.create({
           type: 'negative',
           message:
-            status === 401
-              ? 'No autorizado: inicia sesión como admin'
-              : status
-              ? `Error ${status}`
-              : 'Error inesperado',
+            status === 401 || status === 403
+              ? 'No autorizado, inicia sesión como admin'
+              : 'Error inesperado, inténtalo de nuevo',
         });
       }
     },
