@@ -199,6 +199,72 @@ export function createOrdersRouter(
     }
   });
 
+  router.post('/cancel-order', async (req, res) => {
+    const parsed = z
+      .object({ orderId: z.number().int().positive() })
+      .safeParse(req.body);
+    if (!parsed.success) {
+      const message = parsed.error.issues.map((i) => i.message).join(', ');
+      return res.status(400).json({ error: message });
+    }
+    const { orderId } = parsed.data;
+
+    const authHeader = req.get('authorization');
+    let userId: number | null = null;
+    if (authHeader?.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const payload = jwt.verify(
+          token,
+          process.env.JWT_SECRET || '',
+        ) as jwt.JwtPayload;
+        if (payload.sub) {
+          userId = Number(payload.sub);
+        }
+      } catch {
+        userId = null;
+      }
+    }
+
+    try {
+      const order = await prisma.order.findUnique({ where: { id: orderId } });
+      if (!order || order.status !== 'PAID') {
+        return res
+          .status(404)
+          .json({ error: 'Order not found or cannot be cancelled' });
+      }
+
+      const updated = await prisma.order.update({
+        where: { id: orderId },
+        data: { status: 'CANCELLED' },
+      });
+
+      let cartCleared = false;
+      if (userId) {
+        try {
+          const cart = await prisma.cart.findFirst({ where: { userId } });
+          if (cart) {
+            await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+            cartCleared = true;
+          }
+        } catch (clearErr) {
+          console.error('Error clearing cart:', clearErr);
+        }
+      }
+
+      return res.json({
+        success: true,
+        orderId: updated.id,
+        status: updated.status,
+        cartCleared,
+      });
+    } catch (err) {
+      console.error(err);
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      return res.status(500).json({ success: false, error: message });
+    }
+  });
+
   router.post('/create-preference', async (req, res) => {
     console.log(
       '[DEBUG] Received body:',

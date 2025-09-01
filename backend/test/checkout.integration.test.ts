@@ -207,3 +207,28 @@ describe('checkout create-preference', () => {
     ]);
   });
 });
+
+describe('checkout cancel-order', () => {
+  it('cancels an order and clears cart when authenticated', async () => {
+    prisma.orderToFind = { id: 123, status: 'PAID' };
+    const token = jwt.sign({ sub: 1 }, process.env.JWT_SECRET || '');
+
+    const res = await request(app)
+      .post('/checkout/cancel-order')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ orderId: 123 })
+      .expect(200);
+
+    expect(res.body).toEqual({
+      success: true,
+      orderId: 123,
+      status: 'CANCELLED',
+      cartCleared: true,
+    });
+    expect(prisma.updatedOrder).toEqual({
+      where: { id: 123 },
+      data: { status: 'CANCELLED' },
+    });
+    expect(prisma.carts[0].items).toHaveLength(0);
+  });
+});
