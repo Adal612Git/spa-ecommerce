@@ -42,8 +42,11 @@ async function fetchProducts() {
     await productsStore.fetch();
     $q.notify({ type: 'positive', message: 'Productos cargados' });
   } catch (err) {
-    if (axios.isAxiosError(err) && [401, 403].includes(err.response?.status || 0)) {
+    const status = axios.isAxiosError(err) ? err.response?.status : undefined;
+    if (status === 401 || status === 403) {
       $q.notify({ type: 'negative', message: 'Acceso denegado: se requiere rol ADMIN' });
+    } else if (status === 404) {
+      $q.notify({ type: 'negative', message: 'Recurso no encontrado' });
     } else {
       $q.notify({
         type: 'negative',
@@ -88,8 +91,11 @@ async function save() {
     dialog.value = false;
     await fetchProducts();
   } catch (err) {
-    if (axios.isAxiosError(err) && [401, 403].includes(err.response?.status || 0)) {
+    const status = axios.isAxiosError(err) ? err.response?.status : undefined;
+    if (status === 401 || status === 403) {
       $q.notify({ type: 'negative', message: 'Acceso denegado: se requiere rol ADMIN' });
+    } else if (status === 404) {
+      $q.notify({ type: 'negative', message: 'Recurso no encontrado' });
     } else {
       $q.notify({
         type: 'negative',
@@ -104,8 +110,11 @@ async function remove(id: number) {
     $q.notify({ type: 'positive', message: 'Producto eliminado' });
     await fetchProducts();
   } catch (err) {
-    if (axios.isAxiosError(err) && [401, 403].includes(err.response?.status || 0)) {
+    const status = axios.isAxiosError(err) ? err.response?.status : undefined;
+    if (status === 401 || status === 403) {
       $q.notify({ type: 'negative', message: 'Acceso denegado: se requiere rol ADMIN' });
+    } else if (status === 404) {
+      $q.notify({ type: 'negative', message: 'Recurso no encontrado' });
     } else {
       $q.notify({
         type: 'negative',

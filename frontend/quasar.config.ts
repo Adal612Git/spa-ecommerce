@@ -88,11 +88,6 @@ export default defineConfig((/* ctx */) => {
           rewrite: (path: string) =>
             path.replace(/^\/api\/checkout/, '/checkout'),
         },
-        '/admin': {
-          target: 'http://localhost:3000',
-          changeOrigin: true,
-          rewrite: (path: string) => path.replace(/^\/admin/, '/admin'),
-        },
       },
     },
 

@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
+import express from 'express';
 import bcrypt from 'bcryptjs';
 import type { PrismaClient } from '@prisma/client';
 
@@ -45,29 +46,32 @@ beforeAll(async () => {
 
 beforeEach(() => {
   const prisma = new FakePrisma() as unknown as PrismaClient;
-  app = createApp(prisma);
+  const base = createApp(prisma);
+  const api = express();
+  api.use('/api', base);
+  app = api;
 });
 
 describe('admin auth', () => {
   it('allows seeded admins to login and access protected routes', async () => {
     const login1 = await request(app)
-      .post('/auth/login')
+      .post('/api/auth/login')
       .send({ email: 'admin@example.com', password: 'admin1234' })
       .expect(200);
     expect(login1.body.token).toBeTruthy();
 
     const login2 = await request(app)
-      .post('/auth/login')
+      .post('/api/auth/login')
       .send({ email: 'admin2@example.com', password: 'admin12345' })
       .expect(200);
     expect(login2.body.token).toBeTruthy();
 
     await request(app)
-      .get('/admin/products')
+      .get('/api/admin/products')
       .set('Authorization', `Bearer ${login1.body.token}`)
       .expect(200);
 
-    await request(app).get('/admin/products').expect(401);
+    await request(app).get('/api/admin/products').expect(401);
   });
 });
 
