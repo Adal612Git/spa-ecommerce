@@ -7,6 +7,7 @@ import { Notify } from 'quasar';
 type AdminProduct = Partial<Product> & {
   category?: string;
   status?: 'ACTIVE' | 'INACTIVE';
+  price?: number;
 };
 
 export const useProductsStore = defineStore('adminProducts', {
@@ -34,36 +35,43 @@ export const useProductsStore = defineStore('adminProducts', {
     async save(product: AdminProduct, images: File[]) {
       const auth = useAuthStore();
       const form = new FormData();
-      const { id, name, priceCents, stock, category, status, description } = product;
+      const { id, name, price, priceCents, stock, category, status, description } = product;
       if (name != null) form.append('name', String(name));
       if (description != null) form.append('description', String(description));
-      if (priceCents != null) form.append('priceCents', String(priceCents));
+      if (price != null) {
+        form.append('priceCents', String(Math.round(Number(price) * 100)));
+      } else if (priceCents != null) {
+        form.append('priceCents', String(priceCents));
+      }
       if (stock != null) form.append('stock', String(stock));
       if (category != null) form.append('category', String(category));
       if (status != null) form.append('status', String(status));
       images.forEach((img) => form.append('images', img));
       try {
+        let resp;
         if (id) {
-          await api.put(`/api/admin/products/${id}`, form, {
+          resp = await api.put(`/api/admin/products/${id}`, form, {
             headers: { Authorization: `Bearer ${auth.token}` },
           });
         } else {
-          await api.post('/api/admin/products', form, {
+          resp = await api.post('/api/admin/products', form, {
             headers: { Authorization: `Bearer ${auth.token}` },
           });
         }
-        Notify.create({ type: 'positive', message: 'Producto guardado' });
-        await this.fetch();
+        if (resp.status === 200 || resp.status === 201) {
+          Notify.create({ type: 'positive', message: 'Producto guardado' });
+          await this.fetch();
+        }
       } catch (err: unknown) {
-        const e = err as { response?: { status?: number } };
+        const e = err as { response?: { status?: number; data?: { message?: string } } };
         const status = e.response?.status;
-        Notify.create({
-          type: 'negative',
-          message:
-            status === 401 || status === 403
-              ? 'No autorizado, inicia sesión como admin'
-              : 'Error inesperado, inténtalo de nuevo',
-        });
+        const message =
+          e.response?.data?.message ||
+          (status === 401 || status === 403
+            ? 'No autorizado, inicia sesión como admin'
+            : 'Error inesperado, inténtalo de nuevo');
+        Notify.create({ type: 'negative', message });
+        throw err;
       }
     },
     async updateStock(id: number, stock: number) {
