@@ -44,18 +44,27 @@ export function createAdminRouter(prisma: PrismaClient) {
       if (!req.is('multipart/form-data')) {
         return res.status(415).json({ message: 'Content-Type must be multipart/form-data' });
       }
-      const { name, description, priceCents, category, status, stock } = req.body;
-      if (Number(priceCents) < 0 || Number(stock) < 0) {
+      const { name, slug: bodySlug, description, priceCents, category, status, stock } = req.body;
+      if (!name || !description || priceCents === undefined) {
+        return res.status(400).json({ message: 'Missing required fields' });
+      }
+      const slug = bodySlug && bodySlug.trim() !== ''
+        ? bodySlug
+        : name.toLowerCase().trim().replace(/\s+/g, '-');
+      const price = Number(priceCents);
+      const stockNum = stock !== undefined ? Number(stock) : 0;
+      if (isNaN(price) || isNaN(stockNum) || price < 0 || stockNum < 0) {
         return res.status(400).json({ message: 'Invalid price or stock' });
       }
       const product = await prisma.product.create({
         data: {
           name,
+          slug,
           description,
-          priceCents: Number(priceCents),
+          priceCents: price,
           category,
           status,
-          stock: Number(stock),
+          stock: stockNum,
         },
       });
       if (req.files) {
