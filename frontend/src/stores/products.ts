@@ -15,14 +15,17 @@ export const useProductsStore = defineStore('adminProducts', {
           headers: { Authorization: `Bearer ${auth.token}` },
         });
         this.products = data;
-      } catch (err: any) {
-        const status = err.response?.status;
+      } catch (err: unknown) {
+        const e = err as { response?: { status?: number } };
+        const status = e.response?.status;
         $q.notify({
           type: 'negative',
           message:
-            status === 401 || status === 403
-              ? 'No autorizado'
-              : err.response?.data?.message || 'Error al cargar productos',
+            status === 401
+              ? 'No autorizado: inicia sesión como admin'
+              : status
+              ? `Error ${status}`
+              : 'Error inesperado',
         });
       }
     },
@@ -46,14 +49,17 @@ export const useProductsStore = defineStore('adminProducts', {
         }
         $q.notify({ type: 'positive', message: 'Producto guardado' });
         await this.fetch();
-      } catch (err: any) {
-        const status = err.response?.status;
+      } catch (err: unknown) {
+        const e = err as { response?: { status?: number } };
+        const status = e.response?.status;
         $q.notify({
           type: 'negative',
           message:
-            status === 401 || status === 403
-              ? 'No autorizado'
-              : err.response?.data?.message || 'Error al guardar producto',
+            status === 401
+              ? 'No autorizado: inicia sesión como admin'
+              : status
+              ? `Error ${status}`
+              : 'Error inesperado',
         });
       }
     },
@@ -68,14 +74,17 @@ export const useProductsStore = defineStore('adminProducts', {
         );
         $q.notify({ type: 'positive', message: 'Stock actualizado' });
         await this.fetch();
-      } catch (err: any) {
-        const status = err.response?.status;
+      } catch (err: unknown) {
+        const e = err as { response?: { status?: number } };
+        const status = e.response?.status;
         $q.notify({
           type: 'negative',
           message:
-            status === 401 || status === 403
-              ? 'No autorizado'
-              : err.response?.data?.message || 'Error al actualizar stock',
+            status === 401
+              ? 'No autorizado: inicia sesión como admin'
+              : status
+              ? `Error ${status}`
+              : 'Error inesperado',
         });
       }
     },
@@ -88,14 +97,17 @@ export const useProductsStore = defineStore('adminProducts', {
         });
         $q.notify({ type: 'positive', message: 'Producto eliminado' });
         await this.fetch();
-      } catch (err: any) {
-        const status = err.response?.status;
+      } catch (err: unknown) {
+        const e = err as { response?: { status?: number } };
+        const status = e.response?.status;
         $q.notify({
           type: 'negative',
           message:
-            status === 401 || status === 403
-              ? 'No autorizado'
-              : err.response?.data?.message || 'Error al eliminar producto',
+            status === 401
+              ? 'No autorizado: inicia sesión como admin'
+              : status
+              ? `Error ${status}`
+              : 'Error inesperado',
         });
       }
     },

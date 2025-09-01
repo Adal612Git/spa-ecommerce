@@ -133,9 +133,9 @@ describe('products endpoints', () => {
     expect(res.body.data[0].slug).toBe('alpha');
   });
 
-  it('gets a product by id', async () => {
-    const res = await request(app).get('/products/1').expect(200);
+  it('gets a product by slug', async () => {
+    const res = await request(app).get('/products/alpha').expect(200);
     expect(res.body.slug).toBe('alpha');
-    await request(app).get('/products/2').expect(404);
+    await request(app).get('/products/beta').expect(404);
   });
 });
