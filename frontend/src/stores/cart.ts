@@ -4,14 +4,13 @@ import axios from 'axios';
 import { useAuthStore } from './auth';
 import type { CartItem } from 'src/types/cart';
 import type { Product } from 'src/types/product';
-import { useQuasar } from 'quasar';
+import { Notify } from 'quasar';
 
 const STORAGE_KEY = 'cart';
 const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '' });
 
 export const useCartStore = defineStore('cart', () => {
   const auth = useAuthStore();
-  const $q = useQuasar();
   const cart = ref<CartItem[]>([]);
 
   // Subtotal y total siempre calculados con priceCents
@@ -55,12 +54,12 @@ export const useCartStore = defineStore('cart', () => {
             image_url: item.product.image_url ?? '',
           });
         } catch {
-          $q.notify({ type: 'negative', message: 'Item de carrito inválido' });
+          Notify.create({ type: 'negative', message: 'Item de carrito inválido' });
         }
       }
       cart.value = mapped;
     } catch {
-      $q.notify({ type: 'negative', message: 'Error cargando carrito' });
+      Notify.create({ type: 'negative', message: 'Error cargando carrito' });
       cart.value = [];
     }
   }
@@ -94,7 +93,7 @@ export const useCartStore = defineStore('cart', () => {
         );
         await fetchRemote();
       } catch {
-        $q.notify({ type: 'negative', message: 'Error agregando al carrito' });
+        Notify.create({ type: 'negative', message: 'Error agregando al carrito' });
       }
     } else {
       const existing = cart.value.find((l) => l.productId === product.id);
@@ -130,7 +129,7 @@ export const useCartStore = defineStore('cart', () => {
         );
         await fetchRemote();
       } catch {
-        $q.notify({ type: 'negative', message: 'Error actualizando carrito' });
+        Notify.create({ type: 'negative', message: 'Error actualizando carrito' });
       }
     } else {
       const line = cart.value.find((l) => l.productId === productId);
@@ -151,7 +150,7 @@ export const useCartStore = defineStore('cart', () => {
         );
         await fetchRemote();
       } catch {
-        $q.notify({ type: 'negative', message: 'Error removiendo del carrito' });
+        Notify.create({ type: 'negative', message: 'Error removiendo del carrito' });
       }
     } else {
       cart.value = cart.value.filter((l) => l.productId !== productId);
