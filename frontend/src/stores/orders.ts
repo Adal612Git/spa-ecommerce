@@ -9,6 +9,7 @@ export const useOrdersStore = defineStore('adminOrders', {
     async fetch(status?: string) {
       const auth = useAuthStore();
       const { data } = await api.get('/admin/orders', {
+        baseURL: '',
         params: { status },
         headers: { Authorization: `Bearer ${auth.token}` },
       });
@@ -19,7 +20,7 @@ export const useOrdersStore = defineStore('adminOrders', {
       await api.patch(
         `/admin/orders/${id}/status`,
         { status },
-        { headers: { Authorization: `Bearer ${auth.token}` } }
+        { baseURL: '', headers: { Authorization: `Bearer ${auth.token}` } }
       );
       await this.fetch();
     },

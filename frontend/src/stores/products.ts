@@ -9,6 +9,7 @@ export const useProductsStore = defineStore('adminProducts', {
     async fetch() {
       const auth = useAuthStore();
       const { data } = await api.get('/admin/products', {
+        baseURL: '',
         headers: { Authorization: `Bearer ${auth.token}` },
       });
       this.products = data;
@@ -23,10 +24,12 @@ export const useProductsStore = defineStore('adminProducts', {
 
       if (product.id) {
         await api.put(`/admin/products/${product.id}`, form, {
+          baseURL: '',
           headers: { Authorization: `Bearer ${auth.token}` },
         });
       } else {
         await api.post('/admin/products', form, {
+          baseURL: '',
           headers: { Authorization: `Bearer ${auth.token}` },
         });
       }
@@ -38,13 +41,14 @@ export const useProductsStore = defineStore('adminProducts', {
       await api.patch(
         `/admin/products/${id}/stock`,
         { stock },
-        { headers: { Authorization: `Bearer ${auth.token}` } }
+        { baseURL: '', headers: { Authorization: `Bearer ${auth.token}` } }
       );
       await this.fetch();
     },
     async delete(id: number) {
       const auth = useAuthStore();
       await api.delete(`/admin/products/${id}`, {
+        baseURL: '',
         headers: { Authorization: `Bearer ${auth.token}` },
       });
       await this.fetch();
