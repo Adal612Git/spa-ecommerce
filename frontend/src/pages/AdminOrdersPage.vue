@@ -18,7 +18,7 @@ import axios from 'axios';
 
 const $q = useQuasar();
 const ordersStore = useOrdersStore();
-const statuses = ['PAID', 'PENDING','CONFIRMED','SHIPPED','CANCELLED'];
+const statuses = ['PAID', 'PENDING', 'CANCELED'];
 const columns = [
   { name: 'id', label: 'ID', field: 'id' },
   { name: 'status', label: 'Estado', field: 'status' },
