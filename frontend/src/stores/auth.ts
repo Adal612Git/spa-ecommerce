@@ -13,9 +13,6 @@ interface AuthState {
   user: User | null;
 }
 
-const apiBase =
-  import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '';
-
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
     token: localStorage.getItem('token'),
@@ -27,7 +24,7 @@ export const useAuthStore = defineStore('auth', {
   },
   actions: {
     async login(email: string, password: string) {
-      const res = await fetch(`${apiBase}/auth/login`, {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -39,7 +36,7 @@ export const useAuthStore = defineStore('auth', {
       await this.fetchMe();
     },
     async register(email: string, name: string, password: string) {
-      const res = await fetch(`${apiBase}/auth/register`, {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, name }),
@@ -49,7 +46,7 @@ export const useAuthStore = defineStore('auth', {
     },
     async fetchMe() {
       if (!this.token) return;
-      const res = await fetch(`${apiBase}/auth/me`, {
+      const res = await fetch('/api/auth/me', {
         headers: { Authorization: `Bearer ${this.token}` },
       });
       if (res.ok) {
