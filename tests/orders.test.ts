@@ -10,10 +10,15 @@ process.env.JWT_SECRET = 'testsecret';
 
 let createApp: typeof import('../backend/src/app.js').createApp;
 
+const preferenceCreateMock = vi.fn().mockImplementation(async ({ body }: any) => ({ id: 'pref_test', ...body }));
+
 vi.mock('mercadopago', () => ({
   MercadoPagoConfig: vi.fn().mockImplementation(() => ({})),
   Payment: vi.fn().mockImplementation(() => ({
     get: vi.fn(),
+  })),
+  Preference: vi.fn().mockImplementation(() => ({
+    create: preferenceCreateMock,
   })),
 }));
 
@@ -84,6 +89,7 @@ beforeEach(() => {
   prisma = new FakePrisma();
   app = createApp(prisma as unknown as PrismaClient);
   app.set('trust proxy', 'loopback');
+  preferenceCreateMock.mockClear();
 });
 
 describe('orders', () => {
@@ -113,5 +119,29 @@ describe('orders', () => {
 
     expect(prisma.orders[0].status).toBe('CONFIRMED');
     expect(prisma.products[0].stock).toBe(4);
+  });
+});
+
+describe('checkout create-preference', () => {
+  it('accepts payload with items property', async () => {
+    const res = await request(app)
+      .post('/checkout/create-preference')
+      .send({ items: [{ title: 'Item 1', quantity: 1, unit_price: 10, currency_id: 'USD' }] })
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.items[0].currency_id).toBe('USD');
+    expect(res.body.id).toBe('pref_test');
+  });
+
+  it('accepts array payload and defaults currency_id to MXN', async () => {
+    const res = await request(app)
+      .post('/checkout/create-preference')
+      .send([{ title: 'Item 2', quantity: 2, unit_price: 20 }])
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.items[0].currency_id).toBe('MXN');
+    expect(res.body.id).toBe('pref_test');
   });
 });
