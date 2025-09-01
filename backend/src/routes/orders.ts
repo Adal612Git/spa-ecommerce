@@ -200,68 +200,58 @@ export function createOrdersRouter(
   });
 
   router.post('/cancel-order', async (req, res) => {
-    const parsed = z
-      .object({ orderId: z.number().int().positive() })
-      .safeParse(req.body);
-    if (!parsed.success) {
-      const message = parsed.error.issues.map((i) => i.message).join(', ');
-      return res.status(400).json({ error: message });
-    }
-    const { orderId } = parsed.data;
-
     const authHeader = req.get('authorization');
-    let userId: number | null = null;
-    if (authHeader?.startsWith('Bearer ')) {
-      try {
-        const token = authHeader.replace('Bearer ', '');
-        const payload = jwt.verify(
-          token,
-          process.env.JWT_SECRET || '',
-        ) as jwt.JwtPayload;
-        if (payload.sub) {
-          userId = Number(payload.sub);
-        }
-      } catch {
-        userId = null;
-      }
+    if (!authHeader?.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+
+    let userId: number;
+    try {
+      const token = authHeader.replace('Bearer ', '');
+      const payload = jwt.verify(
+        token,
+        process.env.JWT_SECRET || '',
+      ) as jwt.JwtPayload;
+      if (!payload.sub) throw new Error('Invalid token');
+      userId = Number(payload.sub);
+    } catch (err) {
+      console.error(err);
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
 
     try {
-      const order = await prisma.order.findUnique({ where: { id: orderId } });
-      if (!order || order.status !== 'PAID') {
+      const order = await prisma.order.findFirst({
+        where: { userId, status: 'PENDING' },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (!order) {
         return res
           .status(404)
-          .json({ error: 'Order not found or cannot be cancelled' });
+          .json({ success: false, message: 'No pending order to cancel' });
       }
 
-      const updated = await prisma.order.update({
-        where: { id: orderId },
-        data: { status: 'CANCELLED' },
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { status: 'CANCELED' },
       });
 
       let cartCleared = false;
-      if (userId) {
-        try {
-          const cart = await prisma.cart.findFirst({ where: { userId } });
-          if (cart) {
-            await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
-            cartCleared = true;
-          }
-        } catch (clearErr) {
-          console.error('Error clearing cart:', clearErr);
+      try {
+        const cart = await prisma.cart.findFirst({ where: { userId } });
+        if (cart) {
+          await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+          cartCleared = true;
         }
+      } catch (clearErr) {
+        console.error('Error clearing cart:', clearErr);
       }
 
-      return res.json({
-        success: true,
-        orderId: updated.id,
-        status: updated.status,
-        cartCleared,
-      });
+      return res.json({ success: true, status: 'CANCELLED', cartCleared });
     } catch (err) {
       console.error(err);
       const message = err instanceof Error ? err.message : 'Unknown error';
-      return res.status(500).json({ success: false, error: message });
+      return res.status(500).json({ success: false, message });
     }
   });
 
