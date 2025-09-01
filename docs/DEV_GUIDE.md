@@ -6,7 +6,12 @@
    - `cd frontend && npm install`
    - `cd backend && npm install`
 4. Levanta el frontend: `npm run dev` dentro de `frontend/`.
-5. Levanta el backend: `npm run dev` dentro de `backend/`.
+5. Antes de iniciar el backend asegúrate de que el puerto 3000 esté libre:
+   ```bash
+   lsof -ti:3000 | xargs kill -9
+   ```
+   Luego, levanta el backend: `npm run dev` dentro de `backend/`.
+6. Inicia sesión en el panel de administración con `admin2@example.com` / `admin12345`.
 
 ## Docker local
 ```bash

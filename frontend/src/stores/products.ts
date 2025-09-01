@@ -4,6 +4,11 @@ import type { Product } from 'src/types/product';
 import { useAuthStore } from './auth';
 import { Notify } from 'quasar';
 
+type AdminProduct = Partial<Product> & {
+  category?: string;
+  status?: 'ACTIVE' | 'INACTIVE';
+};
+
 export const useProductsStore = defineStore('adminProducts', {
   state: () => ({ products: [] as Product[] }),
   actions: {
@@ -26,7 +31,7 @@ export const useProductsStore = defineStore('adminProducts', {
         });
       }
     },
-    async save(product: Partial<Product>, images: File[]) {
+    async save(product: AdminProduct, images: File[]) {
       const auth = useAuthStore();
       const form = new FormData();
       const { id, name, priceCents, stock, category, status, description } = product;

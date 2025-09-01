@@ -34,11 +34,11 @@ describe('products store formdata', () => {
         priceCents: 100,
         stock: 5,
         category: 'cat',
-        status: 'ACTIVE',
+        status: 'ACTIVE' as const,
       },
       [file],
     );
-    const body = (api.post as unknown as Mock).mock.calls[0][1];
+    const body = (api.post as unknown as Mock).mock.calls?.[0]?.[1] as FormData;
     expect(body).toBeInstanceOf(FormData);
     expect(body.get('name')).toBe('Test');
     expect(body.get('priceCents')).toBe('100');
@@ -58,7 +58,7 @@ describe('products store formdata', () => {
         priceCents: 100,
         stock: 5,
         category: 'cat',
-        status: 'ACTIVE',
+        status: 'ACTIVE' as const,
       },
       [],
     );
