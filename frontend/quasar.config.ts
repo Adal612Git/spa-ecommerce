@@ -91,6 +91,7 @@ export default defineConfig((/* ctx */) => {
         '/admin': {
           target: 'http://localhost:3000',
           changeOrigin: true,
+          rewrite: (path: string) => path.replace(/^\/admin/, '/admin'),
         },
       },
     },
@@ -110,7 +111,7 @@ export default defineConfig((/* ctx */) => {
       // directives: [],
 
       // Quasar plugins
-      plugins: [],
+      plugins: ['Notify'],
     },
 
     // animations: 'all', // --- includes all animations

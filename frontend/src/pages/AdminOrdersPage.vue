@@ -30,6 +30,7 @@ const filter = ref();
 async function fetch() {
   try {
     await ordersStore.fetch(filter.value);
+    $q.notify({ type: 'positive', message: 'Pedidos cargados' });
   } catch (err) {
     if (axios.isAxiosError(err) && [401, 403].includes(err.response?.status || 0)) {
       $q.notify({ type: 'negative', message: 'Acceso denegado: se requiere rol ADMIN' });

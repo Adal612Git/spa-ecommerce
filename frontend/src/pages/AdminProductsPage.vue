@@ -40,6 +40,7 @@ const productsStore = useProductsStore();
 async function fetchProducts() {
   try {
     await productsStore.fetch();
+    $q.notify({ type: 'positive', message: 'Productos cargados' });
   } catch (err) {
     if (axios.isAxiosError(err) && [401, 403].includes(err.response?.status || 0)) {
       $q.notify({ type: 'negative', message: 'Acceso denegado: se requiere rol ADMIN' });
