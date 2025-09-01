@@ -145,6 +145,7 @@ enum Role {
 
 enum OrderStatus {
   PENDING
+  PAID
   CONFIRMED
   SHIPPED
   CANCELLED

@@ -123,7 +123,7 @@ export function createOrdersRouter(
 
       const order = await prisma.order.create({
         data: {
-          status: 'PENDING',
+          status: 'PAID',
           totalCents: total - discount + shippingCents,
           shipping_cents: shippingCents,
           items: {
@@ -156,14 +156,15 @@ export function createOrdersRouter(
       }
 
       res.json({
+        success: true,
         orderId: order.id,
+        status: order.status,
         totalCents: order.totalCents,
-        zone,
-        shipping_cents: shippingCents,
       });
     } catch (err) {
+      console.error(err);
       const message = err instanceof Error ? err.message : 'Unknown error';
-      res.status(500).json({ error: message });
+      res.status(500).json({ success: false, error: message });
     }
   });
 
