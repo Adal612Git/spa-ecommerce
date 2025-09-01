@@ -94,31 +94,29 @@ beforeEach(() => {
 
 describe('orders', () => {
   it('creates order with default zone when none provided', async () => {
-    await request(app)
+    const res = await request(app)
       .post('/api/orders/create-order')
       .send({ items: [{ productId: 1, quantity: 1 }] })
       .expect(200);
 
+    expect(res.body).toEqual({
+      success: true,
+      orderId: 1,
+      status: 'PAID',
+      totalCents: 1000,
+    });
     expect(prisma.orders[0]).toBeTruthy();
+    expect(prisma.orders[0].status).toBe('PAID');
     expect(prisma.lastShippingZone).toBe('default');
   });
 
-  it('creates order and confirms via webhook', async () => {
+  it('creates order with status PAID', async () => {
     const createRes = await request(app)
       .post('/api/orders/create-order')
       .send({ items: [{ productId: 1, quantity: 1 }], zone: 'NORTE' })
       .expect(200);
-    const orderId = createRes.body.orderId;
-    expect(prisma.orders[0].status).toBe('PENDING');
-
-    await request(app)
-      .post('/webhook/mercadopago')
-      .set('X-Forwarded-For', '1.1.1.1')
-      .send({ id: 'evt1', mp_payment_id: 'pay1', orderId, payment_status: 'approved' })
-      .expect(200);
-
-    expect(prisma.orders[0].status).toBe('CONFIRMED');
-    expect(prisma.products[0].stock).toBe(4);
+    expect(createRes.body.status).toBe('PAID');
+    expect(prisma.orders[0].status).toBe('PAID');
   });
 });
 

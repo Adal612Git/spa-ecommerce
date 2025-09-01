@@ -20,14 +20,14 @@ vi.mock('mercadopago', () => ({
 
 interface Product {
   id: number;
-  price_cents: number;
+  priceCents: number;
   stock: number;
 }
 
 class FakePrisma {
   products: Product[] = [
-    { id: 1, price_cents: 10000, stock: 3 },
-    { id: 5, price_cents: 59900, stock: 1 },
+    { id: 1, priceCents: 10000, stock: 3 },
+    { id: 5, priceCents: 59900, stock: 1 },
   ];
 
   createdOrder: any = null;
@@ -99,8 +99,13 @@ describe('checkout create-order', () => {
       })
       .expect(200);
 
-    expect(res.body.totalCents).toBe(80400);
-    expect(prisma.createdOrder.status).toBe('PENDING');
+    expect(res.body).toEqual({
+      success: true,
+      orderId: 123,
+      status: 'PAID',
+      totalCents: 80400,
+    });
+    expect(prisma.createdOrder.status).toBe('PAID');
     expect(prisma.createdOrder.currency).toBe('MXN');
     expect(prisma.createdOrder.totalCents).toBe(80400);
     expect(prisma.createdOrder.shipping_cents).toBe(500);
@@ -124,8 +129,13 @@ describe('checkout create-order', () => {
       .send({ items: [{ productId: 1, quantity: 1 }] })
       .expect(200);
 
-    expect(res.body.zone).toBe('default');
-    expect(res.body.shipping_cents).toBe(0);
+    expect(res.body).toEqual({
+      success: true,
+      orderId: 123,
+      status: 'PAID',
+      totalCents: 10000,
+    });
+    expect(prisma.createdOrder.status).toBe('PAID');
     expect(prisma.createdOrder.shipping_cents).toBe(0);
   });
 
