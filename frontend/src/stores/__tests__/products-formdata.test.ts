@@ -5,6 +5,7 @@ vi.mock('src/api/api', () => ({
   api: {
     post: vi.fn(),
     put: vi.fn(),
+    get: vi.fn(),
   },
 }));
 
@@ -21,17 +22,20 @@ describe('products store formdata', () => {
     setActivePinia(createPinia());
     (api.post as unknown as Mock).mockReset();
     (api.put as unknown as Mock).mockReset();
+    (api.get as unknown as Mock).mockReset();
     (Notify.create as unknown as Mock).mockReset();
   });
 
   it('sends formdata and notifies success', async () => {
-    (api.post as unknown as Mock).mockResolvedValueOnce({});
+    (api.post as unknown as Mock).mockResolvedValueOnce({ status: 201 });
+    (api.get as unknown as Mock).mockResolvedValueOnce({ data: [] });
     const store = useProductsStore();
     const file = new File(['hello'], 'img.png', { type: 'image/png' });
     await store.save(
       {
         name: 'Test',
-        priceCents: 100,
+        description: 'desc',
+        price: 1,
         stock: 5,
         category: 'cat',
         status: 'ACTIVE' as const,
@@ -50,21 +54,25 @@ describe('products store formdata', () => {
   });
 
   it('notifies error on failure', async () => {
-    (api.post as unknown as Mock).mockRejectedValueOnce({ response: { status: 500 } });
+    (api.post as unknown as Mock).mockRejectedValueOnce({ response: { status: 400, data: { message: 'Bad' } } });
+    (api.get as unknown as Mock).mockResolvedValueOnce({ data: [] });
     const store = useProductsStore();
-    await store.save(
-      {
-        name: 'Bad',
-        priceCents: 100,
-        stock: 5,
-        category: 'cat',
-        status: 'ACTIVE' as const,
-      },
-      [],
-    );
+    await expect(
+      store.save(
+        {
+          name: 'Bad',
+          description: 'd',
+          price: 1,
+          stock: 5,
+          category: 'cat',
+          status: 'ACTIVE' as const,
+        },
+        [],
+      ),
+    ).rejects.toBeDefined();
     expect(Notify.create).toHaveBeenCalledWith({
       type: 'negative',
-      message: 'Error inesperado, inténtalo de nuevo',
+      message: 'Bad',
     });
   });
 });

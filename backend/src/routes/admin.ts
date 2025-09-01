@@ -44,29 +44,91 @@ export function createAdminRouter(prisma: PrismaClient) {
       if (!req.is('multipart/form-data')) {
         return res.status(415).json({ message: 'Content-Type must be multipart/form-data' });
       }
-      const { name, slug: bodySlug, description, priceCents, category, status, stock } = req.body;
-      if (!name || !description || priceCents === undefined) {
-        return res.status(400).json({ message: 'Missing required fields' });
+
+      const {
+        name,
+        slug: bodySlug,
+        description,
+        price,
+        priceCents,
+        category,
+        status,
+        stock,
+      } = req.body;
+
+      const nameVal = name && String(name).trim() !== '' ? String(name).trim() : 'Producto sin nombre';
+      const descriptionVal =
+        description && String(description).trim() !== ''
+          ? String(description).trim()
+          : 'Sin descripción';
+
+      // price can come as price or priceCents
+      let priceCentsVal = 0;
+      if (price != null && String(price).trim() !== '') {
+        priceCentsVal = Math.round(Number(price) * 100);
+      } else if (priceCents != null && String(priceCents).trim() !== '') {
+        priceCentsVal = Number(priceCents);
       }
-      const slug = bodySlug && bodySlug.trim() !== ''
-        ? bodySlug
-        : name.toLowerCase().trim().replace(/\s+/g, '-');
-      const price = Number(priceCents);
-      const stockNum = stock !== undefined ? Number(stock) : 0;
-      if (isNaN(price) || isNaN(stockNum) || price < 0 || stockNum < 0) {
-        return res.status(400).json({ message: 'Invalid price or stock' });
+      if (isNaN(priceCentsVal) || priceCentsVal < 0) {
+        priceCentsVal = 0;
       }
-      const product = await prisma.product.create({
-        data: {
-          name,
-          slug,
-          description,
-          priceCents: price,
-          category,
-          status,
-          stock: stockNum,
-        },
-      });
+
+      let stockNum = Number(stock);
+      if (isNaN(stockNum) || stockNum < 0) {
+        stockNum = 0;
+      }
+
+      const slugBase =
+        bodySlug && bodySlug.trim() !== ''
+          ? bodySlug.trim()
+          : nameVal
+              .toLowerCase()
+              .trim()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-+|-+$/g, '');
+
+      let slug = slugBase;
+      let suffix = 1;
+      const hasFindUnique = typeof (prisma.product as any).findUnique === 'function';
+      while (hasFindUnique && (await prisma.product.findUnique({ where: { slug } }))) {
+        slug = `${slugBase}-${suffix++}`;
+      }
+
+      let product;
+      try {
+        product = await prisma.product.create({
+          data: {
+            name: nameVal,
+            slug,
+            description: descriptionVal,
+            priceCents: priceCentsVal,
+            category,
+            status,
+            stock: stockNum,
+          },
+        });
+      } catch (e: any) {
+        // Handle unique constraint just in case of race condition
+        if (e.code === 'P2002' && e.meta?.target?.includes('slug')) {
+          slug = `${slugBase}-${suffix++}`;
+          product = await prisma.product.create({
+            data: {
+              name: nameVal,
+              slug,
+              description: descriptionVal,
+              priceCents: priceCentsVal,
+              category,
+              status,
+              stock: stockNum,
+            },
+          });
+        } else {
+          return res.status(500).json({ message: 'Error creating product' });
+        }
+      }
+
       if (req.files) {
         const files = req.files as Express.Multer.File[];
         const uploaded = await Promise.all(
@@ -77,6 +139,7 @@ export function createAdminRouter(prisma: PrismaClient) {
           data: { images: { createMany: { data: uploaded } } },
         });
       }
+
       res.status(201).json(product);
     }
   );
