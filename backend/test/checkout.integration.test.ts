@@ -33,6 +33,7 @@ class FakePrisma {
 
   createdOrder: any = null;
   orderToFind: any = null;
+  orderToCancel: any = null;
   updatedOrder: any = null;
 
   shippingRates = [
@@ -81,6 +82,16 @@ class FakePrisma {
     findUnique: async ({ where }: any) => {
       if (this.orderToFind && where.id === this.orderToFind.id) {
         return this.orderToFind;
+      }
+      return null;
+    },
+    findFirst: async ({ where }: any) => {
+      if (
+        this.orderToCancel &&
+        where.userId === this.orderToCancel.userId &&
+        where.status === this.orderToCancel.status
+      ) {
+        return this.orderToCancel;
       }
       return null;
     },
@@ -180,6 +191,43 @@ describe('checkout create-order', () => {
   });
 });
 
+describe('checkout cancel-order', () => {
+  it('cancels pending order and clears cart', async () => {
+    prisma.orderToCancel = { id: 42, userId: 1, status: 'PENDING' };
+    const token = jwt.sign({ sub: 1 }, process.env.JWT_SECRET || '');
+    const res = await request(app)
+      .post('/checkout/cancel-order')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(res.body).toEqual({
+      success: true,
+      status: 'CANCELLED',
+      cartCleared: true,
+    });
+    expect(prisma.updatedOrder).toEqual({
+      where: { id: 42 },
+      data: { status: 'CANCELED' },
+    });
+    expect(prisma.carts[0].items).toHaveLength(0);
+  });
+
+  it('returns error when no pending order', async () => {
+    const token = jwt.sign({ sub: 1 }, process.env.JWT_SECRET || '');
+    const res = await request(app)
+      .post('/checkout/cancel-order')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(404);
+
+    expect(res.body).toEqual({
+      success: false,
+      message: 'No pending order to cancel',
+    });
+    expect(prisma.updatedOrder).toBeNull();
+    expect(prisma.carts[0].items).toHaveLength(1);
+  });
+});
+
 describe('checkout create-preference', () => {
   it('accepts an array of items as the body', async () => {
     const payload = [{ title: 'Prod 1', quantity: 2, unit_price: 100 }];
@@ -205,30 +253,5 @@ describe('checkout create-preference', () => {
     expect(res.body.items).toEqual([
       { title: 'Prod 1', quantity: 2, unit_price: 100, currency_id: 'MXN' },
     ]);
-  });
-});
-
-describe('checkout cancel-order', () => {
-  it('cancels an order and clears cart when authenticated', async () => {
-    prisma.orderToFind = { id: 123, status: 'PAID' };
-    const token = jwt.sign({ sub: 1 }, process.env.JWT_SECRET || '');
-
-    const res = await request(app)
-      .post('/checkout/cancel-order')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ orderId: 123 })
-      .expect(200);
-
-    expect(res.body).toEqual({
-      success: true,
-      orderId: 123,
-      status: 'CANCELLED',
-      cartCleared: true,
-    });
-    expect(prisma.updatedOrder).toEqual({
-      where: { id: 123 },
-      data: { status: 'CANCELLED' },
-    });
-    expect(prisma.carts[0].items).toHaveLength(0);
   });
 });

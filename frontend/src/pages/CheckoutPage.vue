@@ -43,7 +43,16 @@
         <div>
           Total: {{ (total / 100).toFixed(2) }} {{ currency }}
         </div>
-        <CheckoutButton class="q-mt-md" @click="async () => { await pay(); }" />
+        <div class="row q-mt-md q-gutter-sm">
+          <CheckoutButton @click="async () => { await pay(); }" />
+          <q-btn
+            label="Cancelar"
+            color="negative"
+            @click="async () => {
+              await cancel();
+            }"
+          />
+        </div>
       </div>
     </div>
   </q-page>
@@ -55,11 +64,13 @@ import { ref, computed } from 'vue';
 import { useCartStore } from 'stores/cart';
 import { useCouponStore } from 'stores/coupons';
 import { useShippingStore } from 'stores/shipping';
+import { useAuthStore } from 'stores/auth';
 import { useQuasar } from 'quasar';
 
 const cartStore = useCartStore();
 const couponStore = useCouponStore();
 const shippingStore = useShippingStore();
+const auth = useAuthStore();
 const cart = computed(() => cartStore.cart);
 const subtotal = computed(() => cartStore.subtotal);
 const discount = computed(() => couponStore.coupon?.discount ?? 0);
@@ -121,6 +132,29 @@ async function pay() {
     });
   } catch (err) {
     $q.notify({ type: 'negative', message: (err as Error).message });
+  }
+}
+
+async function cancel() {
+  try {
+    const res = await fetch(`${apiBase}/checkout/cancel-order`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${auth.token}` },
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'Error cancelando orden');
+    }
+    cartStore.cart = [];
+    $q.notify({
+      type: 'positive',
+      message: 'Orden cancelada y carrito vaciado',
+    });
+  } catch (err) {
+    $q.notify({
+      type: 'negative',
+      message: (err as Error).message,
+    });
   }
 }
 </script>
