@@ -2,6 +2,7 @@ import express from 'express';
 import { z } from 'zod';
 // eslint-disable-next-line import/no-unresolved
 import { MercadoPagoConfig, Preference } from 'mercadopago';
+import jwt from 'jsonwebtoken';
 import type { PrismaClient, User } from '@prisma/client';
 import type { Counter } from 'prom-client';
 // eslint-disable-next-line import/no-unresolved
@@ -72,6 +73,22 @@ export function createOrdersRouter(
     }
 
     const { items, email, couponId, zone } = parsed.data;
+    const authHeader = req.get('authorization');
+    let userId: number | null = null;
+    if (authHeader?.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const payload = jwt.verify(
+          token,
+          process.env.JWT_SECRET || '',
+        ) as jwt.JwtPayload;
+        if (payload.sub) {
+          userId = Number(payload.sub);
+        }
+      } catch {
+        userId = null;
+      }
+    }
     try {
       const ids = items.map((i) => i.productId);
       const products = await prisma.product.findMany({
@@ -155,11 +172,25 @@ export function createOrdersRouter(
         });
       }
 
+      let cartCleared = false;
+      if (userId) {
+        try {
+          const cart = await prisma.cart.findFirst({ where: { userId } });
+          if (cart) {
+            await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+            cartCleared = true;
+          }
+        } catch (clearErr) {
+          console.error('Error clearing cart:', clearErr);
+        }
+      }
+
       res.json({
         success: true,
         orderId: order.id,
         status: order.status,
         totalCents: order.totalCents,
+        cartCleared,
       });
     } catch (err) {
       console.error(err);

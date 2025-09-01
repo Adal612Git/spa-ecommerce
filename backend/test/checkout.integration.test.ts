@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
+import jwt from 'jsonwebtoken';
 import type { PrismaClient } from '@prisma/client';
 
 let createApp: typeof import('../src/app.js').createApp;
@@ -38,6 +39,10 @@ class FakePrisma {
     { zone: 'NORTE', minWeight: 1, maxWeight: 10, priceCents: 500 },
   ];
 
+  carts: Array<{ id: number; userId: number; items: Array<{ id: number }>; }> = [
+    { id: 1, userId: 1, items: [{ id: 10 }] },
+  ];
+
   product = {
     findMany: async ({ where }: any) => {
       const ids: number[] = where.id.in;
@@ -53,6 +58,18 @@ class FakePrisma {
           (r) => r.zone === where.zone && r.minWeight <= weight && r.maxWeight >= weight,
         ) || null
       );
+    },
+  };
+
+  cart = {
+    findFirst: async ({ where }: any) =>
+      this.carts.find((c) => c.userId === where.userId) || null,
+  };
+
+  cartItem = {
+    deleteMany: async ({ where }: any) => {
+      const cart = this.carts.find((c) => c.id === where.cartId);
+      if (cart) cart.items = [];
     },
   };
 
@@ -134,6 +151,7 @@ describe('checkout create-order', () => {
       orderId: 123,
       status: 'PAID',
       totalCents: 10000,
+      cartCleared: false,
     });
     expect(prisma.createdOrder.status).toBe('PAID');
     expect(prisma.createdOrder.shipping_cents).toBe(0);
@@ -147,6 +165,18 @@ describe('checkout create-order', () => {
 
     expect(res.body).toEqual({ error: 'Invalid shipping zone' });
     expect(prisma.createdOrder).toBeNull();
+  });
+
+  it('clears cart after order creation when authenticated', async () => {
+    const token = jwt.sign({ sub: 1 }, process.env.JWT_SECRET || '');
+    const res = await request(app)
+      .post('/checkout/create-order')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ items: [{ productId: 1, quantity: 1 }] })
+      .expect(200);
+
+    expect(res.body.cartCleared).toBe(true);
+    expect(prisma.carts[0].items).toHaveLength(0);
   });
 });
 
