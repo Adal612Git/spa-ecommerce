@@ -168,30 +168,75 @@ export function createOrdersRouter(
   });
 
   router.post('/create-preference', async (req, res) => {
-    req.log?.info({ body: req.body }, 'Received create-preference body');
-
-    let items: Array<{ title: string; quantity: number; unit_price: number; currency_id?: string }> = [];
-
-    if (Array.isArray(req.body)) {
-      items = req.body;
-    } else if (Array.isArray(req.body.items)) {
-      items = req.body.items;
-    } else if (req.body?.preference && Array.isArray(req.body.preference.items)) {
-      items = req.body.preference.items;
-    }
-
-    if (!Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ success: false, message: 'No items provided' });
-    }
-
-    const normalizedItems = items.map((item) => ({
-      ...item,
-      currency_id: item.currency_id ?? 'MXN',
-    }));
-
-    req.log?.info({ items: normalizedItems }, 'Items to send to MercadoPago');
+    const logger = (req.log ?? console) as any;
 
     try {
+      req.log?.info({ body: req.body }, 'Received create-preference body');
+      logger.debug(
+        `[DEBUG] Received body (type=${typeof req.body}):`,
+        req.body,
+      );
+      logger.debug(
+        `[DEBUG] req.body.items exists: ${
+          req.body && Object.prototype.hasOwnProperty.call(req.body, 'items')
+        }, type: ${Array.isArray(req.body?.items) ? 'array' : typeof req.body?.items}`,
+      );
+      logger.debug(
+        `[DEBUG] req.body.preference?.items exists: ${
+          req.body?.preference &&
+          Object.prototype.hasOwnProperty.call(req.body.preference, 'items')
+        }, type: ${
+          Array.isArray(req.body?.preference?.items)
+            ? 'array'
+            : typeof req.body?.preference?.items
+        }`,
+      );
+
+      let items: Array<{
+        title: string;
+        quantity: number;
+        unit_price: number;
+        currency_id?: string;
+      }> = [];
+
+      if (Array.isArray(req.body)) {
+        items = req.body;
+      } else if (Array.isArray(req.body?.items)) {
+        items = req.body.items;
+      } else if (Array.isArray(req.body?.preference?.items)) {
+        items = req.body.preference.items;
+      }
+
+      logger.debug('[DEBUG] Normalized items:', items);
+
+      if (!Array.isArray(items) || items.length === 0) {
+        const response: Record<string, unknown> = {
+          success: false,
+          message: 'No items provided',
+        };
+        if (process.env.NODE_ENV !== 'production') {
+          response.context = {
+            body: req.body,
+            bodyType: typeof req.body,
+            itemsType: typeof req.body?.items,
+            preferenceItemsType: typeof req.body?.preference?.items,
+          };
+        }
+        return res.status(400).json(response);
+      }
+
+      const normalizedItems = items.map((item) => ({
+        ...item,
+        currency_id: item.currency_id ?? 'MXN',
+      }));
+
+      logger.debug(
+        '[DEBUG] Items after currency normalization:',
+        normalizedItems,
+      );
+
+      req.log?.info({ items: normalizedItems }, 'Items to send to MercadoPago');
+
       const mp = new MercadoPagoConfig({
         accessToken: process.env.MP_ACCESS_TOKEN || '',
       });
@@ -215,15 +260,30 @@ export function createOrdersRouter(
         items: normalizedItems,
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      const stack = err instanceof Error ? err.stack : undefined;
-      req.log?.error({ err }, 'Error creating MercadoPago preference');
-      return res.status(500).json({
+      const error = err as Error;
+      const errorInfo = {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      };
+      (req.log ?? console).error(
+        errorInfo,
+        'Error creating MercadoPago preference',
+      );
+      const response: Record<string, unknown> = {
         success: false,
         message: 'Error creando preferencia',
-        error: message,
-        stack,
-      });
+      };
+      if (process.env.NODE_ENV !== 'production') {
+        response.error = errorInfo;
+        response.context = {
+          body: req.body,
+          bodyType: typeof req.body,
+          itemsType: typeof req.body?.items,
+          preferenceItemsType: typeof req.body?.preference?.items,
+        };
+      }
+      return res.status(500).json(response);
     }
   });
 
