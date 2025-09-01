@@ -11,29 +11,31 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from 'src/stores/auth';
 
 interface Props {
   mode: 'login' | 'register';
 }
 
 const props = defineProps<Props>();
+const emit = defineEmits<{
+  (
+    e: 'submit',
+    payload: { email: string; name: string; password: string }
+  ): void;
+}>();
+
 const email = ref('');
 const name = ref('');
 const password = ref('');
-const auth = useAuthStore();
-const router = useRouter();
 
 const buttonLabel = computed(() => (props.mode === 'login' ? 'Login' : 'Register'));
 
-async function onSubmit() {
-  if (props.mode === 'login') {
-    await auth.login(email.value, password.value);
-  } else {
-    await auth.register(email.value, name.value, password.value);
-  }
-  await router.push('/');
+function onSubmit() {
+  emit('submit', {
+    email: email.value,
+    name: name.value,
+    password: password.value,
+  });
 }
 </script>
 
