@@ -68,7 +68,7 @@ import { api } from 'src/api/api';
 const cartStore = useCartStore();
 const couponStore = useCouponStore();
 const shippingStore = useShippingStore();
-const cart = computed(() => cartStore.cart);
+const cart = computed(() => cartStore.items);
 const subtotal = computed(() => cartStore.subtotal);
 const discount = computed(() => couponStore.coupon?.discount ?? 0);
 const shippingCost = computed(() => shippingStore.cost ?? 0);
@@ -135,8 +135,6 @@ async function pay() {
 async function cancelOrder() {
   try {
     await api.post('/checkout/cancel-order');
-    cartStore.cart = [];
-    // @ts-ignore - mantener compatibilidad si existe `items`
     cartStore.items = [];
     $q.notify({
       type: 'negative',

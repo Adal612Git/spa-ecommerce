@@ -65,7 +65,7 @@ import { api } from 'src/api/api';
 
 const cartStore = useCartStore();
 const auth = useAuthStore();
-const cart = computed(() => cartStore.cart);
+const cart = computed(() => cartStore.items);
 const subtotal = computed(() => cartStore.subtotal);
 const total = computed(() => cartStore.total);
 const currency = computed(() => cart.value[0]?.currency ?? 'USD');
@@ -88,7 +88,7 @@ async function pay() {
     const data = await orderRes.json();
     if (!data.success) throw new Error('Pago no procesado');
     if (data.cartCleared) {
-      cartStore.cart = [];
+      cartStore.items = [];
     }
     $q.notify({
       type: 'positive',
@@ -102,8 +102,6 @@ async function pay() {
 async function cancelOrder() {
   try {
     await api.post('/checkout/cancel-order');
-    cartStore.cart = [];
-    // @ts-ignore - mantener compatibilidad si existe `items`
     cartStore.items = [];
     $q.notify({
       type: 'negative',
