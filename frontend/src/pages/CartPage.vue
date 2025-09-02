@@ -44,12 +44,6 @@
         </div>
         <div class="q-mt-md">
           <q-btn color="primary" label="Pagar" @click="async () => { await pay(); }" />
-          <q-btn
-            color="negative"
-            label="Cancelar"
-            class="q-ml-sm"
-            @click="cancelOrder"
-          />
         </div>
       </div>
     </div>
@@ -61,7 +55,6 @@ import { computed } from 'vue';
 import { useCartStore } from 'stores/cart';
 import { useAuthStore } from 'stores/auth';
 import { useQuasar } from 'quasar';
-import { api } from 'src/api/api';
 
 const cartStore = useCartStore();
 const auth = useAuthStore();
@@ -96,20 +89,6 @@ async function pay() {
     });
   } catch (err) {
     $q.notify({ type: 'negative', message: (err as Error).message });
-  }
-}
-
-async function cancelOrder() {
-  try {
-    await api.post('/checkout/cancel-order');
-    cartStore.items = [];
-    $q.notify({
-      type: 'negative',
-      message: 'Orden cancelada y carrito vaciado',
-    });
-  } catch (err) {
-    console.error(err);
-    $q.notify({ type: 'negative', message: 'Error al cancelar la orden' });
   }
 }
 </script>

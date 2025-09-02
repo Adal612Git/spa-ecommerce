@@ -45,11 +45,6 @@
         </div>
         <div class="row q-mt-md q-gutter-sm">
           <CheckoutButton @click="async () => { await pay(); }" />
-          <q-btn
-            label="Cancelar"
-            color="negative"
-            @click="cancelOrder"
-          />
         </div>
       </div>
     </div>
@@ -63,7 +58,6 @@ import { useCartStore } from 'stores/cart';
 import { useCouponStore } from 'stores/coupons';
 import { useShippingStore } from 'stores/shipping';
 import { useQuasar } from 'quasar';
-import { api } from 'src/api/api';
 
 const cartStore = useCartStore();
 const couponStore = useCouponStore();
@@ -129,23 +123,6 @@ async function pay() {
     });
   } catch (err) {
     $q.notify({ type: 'negative', message: (err as Error).message });
-  }
-}
-
-async function cancelOrder() {
-  try {
-    await api.post('/checkout/cancel-order');
-    cartStore.items = [];
-    $q.notify({
-      type: 'negative',
-      message: 'Orden cancelada y carrito vaciado',
-    });
-  } catch (err) {
-    console.error(err);
-    $q.notify({
-      type: 'negative',
-      message: 'Error al cancelar la orden',
-    });
   }
 }
 </script>
